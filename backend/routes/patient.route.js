@@ -3,10 +3,12 @@ import patientController from '../controllers/patient.controller.js';
 
 const router = express.Router();
 
-router.post('/patients', patientController.createPatient);
-router.get('/patients', patientController.getPatients);
-router.get('/patients/:id', patientController.getPatientById);
-router.put('/patients/:id', patientController.updatePatient);
-router.delete('/patients/:id', patientController.deletePatient);
+// Patient registration and management endpoints.
+router.post('/', patientController.register);
+router.get('/', patientController.getAll);
+router.get('/:id', patientController.getById);
+router.put('/:id', patientController.update);
+router.patch('/:id/status', patientController.setActiveStatus);
+router.delete('/:id', patientController.remove);
 
 export default router;

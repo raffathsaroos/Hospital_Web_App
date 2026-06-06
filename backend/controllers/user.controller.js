@@ -1,5 +1,6 @@
 import userService from '../services/user.services.js';
 
+// Controllers translate HTTP requests into service calls and responses.
 const signup = async (req, res) => {
 	try {
 		const result = await userService.signupUser(req.body);

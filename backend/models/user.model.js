@@ -1,87 +1,78 @@
 import mongoose from 'mongoose';
 
+// Common account and profile fields shared by every user role.
 const UserSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-      required: [true, "First name is required"],
+      required: [true, 'First name is required'],
       trim: true,
-      minlength: [2, "First name must be at least 2 characters"],
+      minlength: [2, 'First name must be at least 2 characters'],
     },
-
     lastName: {
       type: String,
-      required: [true, "Last name is required"],
+      required: [true, 'Last name is required'],
       trim: true,
-      minlength: [2, "Last name must be at least 2 characters"],
+      minlength: [2, 'Last name must be at least 2 characters'],
     },
-
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
-
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
+      required: [true, 'Phone number is required'],
       unique: true,
       trim: true,
-      match: [/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"],
+      match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number'],
     },
-
     nic: {
       type: String,
-      required: [true, "NIC is required"],
+      required: [true, 'NIC is required'],
       unique: true,
       trim: true,
     },
-
     dob: {
       type: Date,
-      required: [true, "Date of birth is required"],
+      required: [true, 'Date of birth is required'],
     },
-
     gender: {
       type: String,
-      required: [true, "Gender is required"],
+      required: [true, 'Gender is required'],
       enum: {
-        values: ["Male", "Female", "Other"],
-        message: "Gender must be Male, Female, or Other",
+        values: ['Male', 'Female', 'Other'],
+        message: 'Gender must be Male, Female, or Other',
       },
     },
-
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [8, "Password must be at least 8 characters"],
+      required: [true, 'Password is required'],
+      minlength: [8, 'Password must be at least 8 characters'],
       select: false,
     },
-
     role: {
       type: String,
-      required: [true, "Role is required"],
+      required: [true, 'Role is required'],
       enum: {
         values: [
-          "Patient",
-          "Doctor",
-          "Admin",
-          "Nurse",
-          "Pharmacist",
-          "Receptionist",
+          'Patient',
+          'Doctor',
+          'Admin',
+          'Nurse',
+          'Pharmacist',
+          'Receptionist',
         ],
-        message: "Invalid role",
+        message: 'Invalid role',
       },
     },
-
     isActive: {
       type: Boolean,
       default: true,
     },
-
     avatar: {
       public_id: {
         type: String,
@@ -90,15 +81,13 @@ const UserSchema = new mongoose.Schema(
       url: {
         type: String,
         default:
-          "https://res.cloudinary.com/your-cloud/image/upload/v1/default-avatar.png",
+          'https://res.cloudinary.com/your-cloud/image/upload/v1/default-avatar.png',
       },
     },
-
     lastLogin: {
       type: Date,
       default: null,
     },
-
     passwordChangedAt: {
       type: Date,
       default: null,
@@ -109,8 +98,6 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-UserSchema.index({ email: 1 });
-UserSchema.index({ nic: 1 });
 UserSchema.index({ role: 1 });
 
 const User = mongoose.model('User', UserSchema);

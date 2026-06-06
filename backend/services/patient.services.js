@@ -1,112 +1,115 @@
 import patientDao from '../dao/patient.dao.js';
+import userDao from '../dao/user.dao.js';
 
-const buildPatientFilter = ({ status, bloodGroup, search } = {}) => {
-	const filter = {};
+// Only these common account fields may enter the User document from patient APIs.
+const registrationUserFields = [
+  'firstName',
+  'lastName',
+  'email',
+  'phone',
+  'nic',
+  'dob',
+  'gender',
+  'password',
+];
 
-	if (status) filter.status = status;
-	if (bloodGroup) filter.bloodGroup = bloodGroup;
+const editableUserFields = [
+  ...registrationUserFields,
+  'avatar',
+];
 
-	if (search) {
-		filter.$or = [
-			{ firstName: { $regex: search, $options: 'i' } },
-			{ lastName: { $regex: search, $options: 'i' } },
-			{ phone: { $regex: search, $options: 'i' } },
-			{ email: { $regex: search, $options: 'i' } },
-			{ nationalId: { $regex: search, $options: 'i' } }
-		];
-	}
-
-	return filter;
+const createError = (message, statusCode) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
 };
 
-const ensureUniquePatient = async ({ email, nationalId }, patientIdToSkip = null) => {
-	if (email) {
-		const patient = await patientDao.findPatientByEmail(email);
-		if (patient && patient._id.toString() !== patientIdToSkip) {
-			const error = new Error('Patient email already exists.');
-			error.statusCode = 400;
-			throw error;
-		}
-	}
+const pickFields = (data, allowedFields) =>
+  Object.fromEntries(
+    Object.entries(data).filter(([key]) => allowedFields.includes(key))
+  );
 
-	if (nationalId) {
-		const patient = await patientDao.findPatientByNationalId(nationalId);
-		if (patient && patient._id.toString() !== patientIdToSkip) {
-			const error = new Error('Patient national ID already exists.');
-			error.statusCode = 400;
-			throw error;
-		}
-	}
+const ensureUniqueUser = async (userData, excludeId) => {
+  const existingUser = await userDao.findUserByUniqueFields(userData, excludeId);
+
+  if (!existingUser) return;
+
+  if (
+    userData.email &&
+    existingUser.email === userData.email.toLowerCase().trim()
+  ) {
+    throw createError('A user with this email already exists.', 409);
+  }
+
+  if (userData.phone && existingUser.phone === userData.phone.trim()) {
+    throw createError('A user with this phone number already exists.', 409);
+  }
+
+  throw createError('A user with this NIC already exists.', 409);
 };
 
-const createPatient = async (patientData) => {
-	await ensureUniquePatient(patientData);
-	const patient = await patientDao.createPatient(patientData);
+const registerPatient = async (patientData) => {
+  const userData = pickFields(patientData, registrationUserFields);
 
-	return {
-		message: 'Patient created successfully!',
-		patient
-	};
+  await ensureUniqueUser(userData);
+
+  const user = await userDao.createUser({
+    ...userData,
+    // Patient registration must never create a privileged account.
+    role: 'Patient',
+  });
+
+  try {
+    const patient = await patientDao.createPatient({ user: user._id });
+    return patientDao.findPatientById(patient._id);
+  } catch (error) {
+    // Avoid leaving an unused user if patient profile creation fails.
+    await userDao.deleteUserById(user._id);
+    throw error;
+  }
 };
 
-const getPatients = async (query) => {
-	const patients = await patientDao.findPatients(buildPatientFilter(query));
+const getPatients = () => patientDao.findAllPatients();
 
-	return {
-		message: 'Patients fetched successfully!',
-		patients
-	};
+const getPatient = async (id) => {
+  const patient = await patientDao.findPatientById(id);
+
+  if (!patient) {
+    throw createError('Patient not found.', 404);
+  }
+
+  return patient;
 };
 
-const getPatientById = async (patientId) => {
-	const patient = await patientDao.findPatientById(patientId);
+const updatePatient = async (id, patientData) => {
+  const patient = await getPatient(id);
+  const updates = pickFields(patientData, editableUserFields);
 
-	if (!patient) {
-		const error = new Error('Patient not found.');
-		error.statusCode = 404;
-		throw error;
-	}
+  await ensureUniqueUser(updates, patient.user._id);
+  await userDao.updateUserById(patient.user._id, updates);
 
-	return {
-		message: 'Patient fetched successfully!',
-		patient
-	};
+  return patientDao.findPatientById(id);
 };
 
-const updatePatient = async (patientId, patientData) => {
-	await ensureUniquePatient(patientData, patientId);
-	const patient = await patientDao.updatePatientById(patientId, patientData);
+const setPatientActiveStatus = async (id, isActive) => {
+  const patient = await getPatient(id);
 
-	if (!patient) {
-		const error = new Error('Patient not found.');
-		error.statusCode = 404;
-		throw error;
-	}
-
-	return {
-		message: 'Patient updated successfully!',
-		patient
-	};
+  await userDao.updateUserById(patient.user._id, { isActive });
+  return patientDao.findPatientById(id);
 };
 
-const deletePatient = async (patientId) => {
-	const patient = await patientDao.deletePatientById(patientId);
+const deletePatient = async (id) => {
+  const patient = await getPatient(id);
 
-	if (!patient) {
-		const error = new Error('Patient not found.');
-		error.statusCode = 404;
-		throw error;
-	}
-
-	return {
-		message: 'Patient deleted successfully!'
-	};
+  await patientDao.deletePatientById(id);
+  await userDao.deleteUserById(patient.user._id);
 };
 
 export default {
-	createPatient,
-	getPatients,
-	getPatientById,
-	updatePatient,
-	deletePatient
+  registerPatient,
+  getPatients,
+  getPatient,
+  updatePatient,
+  setPatientActiveStatus,
+  deletePatient,
 };
