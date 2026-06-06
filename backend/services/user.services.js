@@ -15,13 +15,15 @@ const signupUser = async (userData) => {
 		message: 'User created successfully!',
 		user: {
 			email: createdUser.email,
-			username: createdUser.username
+			firstName: createdUser.firstName,
+			lastName: createdUser.lastName,
+			role: createdUser.role
 		}
 	};
 };
 
 const loginUser = async ({ email, password }) => {
-	const user = await userDao.findUserByEmail(email);
+	const user = await userDao.findUserByEmailWithPassword(email);
 
 	if (!user || user.password !== password) {
 		const error = new Error('Invalid email or password.');
@@ -32,7 +34,9 @@ const loginUser = async ({ email, password }) => {
 	return {
 		message: 'Login successful!',
 		email: user.email,
-		username: user.username
+		firstName: user.firstName,
+		lastName: user.lastName,
+		role: user.role
 	};
 };
 
