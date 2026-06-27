@@ -27,6 +27,13 @@ export default function PatientListPage() {
       const { data, error } = await getPatients()
       if (error) {
         setError(error)
+      } else if (
+        !Array.isArray(data?.patients) ||
+        data.patients.some((patient) => !patient?.user)
+      ) {
+        setError(
+          'The API returned patient records in an incompatible format. Check that the backend is connected to the database configured for this app.'
+        )
       } else {
         setPatients(data.patients)
       }

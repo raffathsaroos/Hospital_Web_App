@@ -11,6 +11,9 @@ async function call(fn) {
     const message =
       body?.errors?.map?.((e) => e.message ?? e)?.join(', ') ??
       body?.message ??
+      (err.code === 'ERR_NETWORK'
+        ? 'Cannot connect to the API server. Make sure the backend is running on port 5000.'
+        : null) ??
       'Something went wrong'
     return { data: null, error: message }
   }
