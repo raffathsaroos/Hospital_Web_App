@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/user.route.js';
 import patientRoutes from './routes/patient.route.js';
+import appointmentRoutes from './routes/appointment.route.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ mongoose
 // API routes pass requests through controllers, services, and DAOs.
 app.use('/api', userRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

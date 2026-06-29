@@ -1,0 +1,462 @@
+import mongoose from 'mongoose';
+import appointmentDao from '../dao/appointment.dao.js';
+import {
+  APPOINTMENT_STATUSES,
+  APPOINTMENT_TYPES,
+} from '../models/appointment.model.js';
+import { DEPARTMENTS } from '../constants/departments.const.js';
+
+const staffRoles = ['Admin', 'Receptionist'];
+const timeSlotPattern =
+  /^([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d$/;
+
+const createError = (message, statusCode) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const requireValidId = (id, label) => {
+  if (!isValidId(id)) {
+    throw createError(`Invalid ${label}.`, 400);
+  }
+};
+
+const parseDate = (value) => {
+  const date = new Date(value);
+
+  if (!value || Number.isNaN(date.getTime())) {
+    throw createError('Invalid appointment date.', 400);
+  }
+
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+};
+
+const ensureFutureDate = (date) => {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  if (date < today) {
+    throw createError('Appointment date cannot be in the past.', 400);
+  }
+};
+
+const toMinutes = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const parseTimeSlot = (timeSlot) => {
+  if (!timeSlotPattern.test(timeSlot || '')) {
+    throw createError(
+      'Time slot must use HH:mm - HH:mm format.',
+      400
+    );
+  }
+
+  const [startTime, endTime] = timeSlot.split(' - ');
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+
+  if (end <= start) {
+    throw createError('Time slot end must be after its start.', 400);
+  }
+
+  return {
+    start,
+    end,
+  };
+};
+
+const ensureRequiredBookingFields = (data) => {
+  const requiredFields = [
+    'doctorId',
+    'appointmentDate',
+    'timeSlot',
+    'appointmentType',
+  ];
+
+  const missingField = requiredFields.find((field) => !data[field]);
+
+  if (missingField) {
+    throw createError(`${missingField} is required.`, 400);
+  }
+
+  if (!APPOINTMENT_TYPES.includes(data.appointmentType)) {
+    throw createError('Invalid appointment type.', 400);
+  }
+};
+
+const ensureGuestPatient = (guestPatient) => {
+  if (!guestPatient || typeof guestPatient !== 'object') {
+    throw createError('Guest patient details are required.', 400);
+  }
+
+  const requiredFields = ['firstName', 'lastName', 'phone'];
+  const missingField = requiredFields.find(
+    (field) => !guestPatient[field]
+  );
+
+  if (missingField) {
+    throw createError(
+      `Guest patient ${missingField} is required.`,
+      400
+    );
+  }
+};
+
+const getWeekDay = (date) =>
+  [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ][date.getUTCDay()];
+
+const ensureAvailableSlot = (doctor, date, timeSlot) => {
+  if (!doctor || !doctor.isAvailable) {
+    throw createError('Doctor is not available for booking.', 409);
+  }
+
+  if (!doctor.userId || !doctor.userId.isActive) {
+    throw createError('Doctor account is inactive.', 409);
+  }
+
+  const day = getWeekDay(date);
+
+  if (!doctor.availableDays.includes(day)) {
+    throw createError('Doctor is not available on this day.', 409);
+  }
+
+  const requested = parseTimeSlot(timeSlot);
+  const matchingWindow = doctor.availableTimeSlots.find((slot) => {
+    if (slot.day !== day) return false;
+
+    const windowStart = toMinutes(slot.startTime);
+    const windowEnd = toMinutes(slot.endTime);
+    const duration = requested.end - requested.start;
+
+    return (
+      requested.start >= windowStart &&
+      requested.end <= windowEnd &&
+      duration === slot.slotDurationMinutes &&
+      (requested.start - windowStart) % slot.slotDurationMinutes === 0
+    );
+  });
+
+  if (!matchingWindow) {
+    throw createError('Selected time slot is not available.', 409);
+  }
+};
+
+const prepareBooking = async (data) => {
+  ensureRequiredBookingFields(data);
+  requireValidId(data.doctorId, 'doctor ID');
+
+  const appointmentDate = parseDate(data.appointmentDate);
+  const timeSlot = data.timeSlot.trim();
+  ensureFutureDate(appointmentDate);
+
+  const doctor = await appointmentDao.findDoctorProfile(data.doctorId);
+  ensureAvailableSlot(doctor, appointmentDate, timeSlot);
+
+  const conflict = await appointmentDao.findSlotConflict({
+    doctorId: data.doctorId,
+    appointmentDate,
+    timeSlot,
+    excludeId: data.excludeId,
+  });
+
+  if (conflict) {
+    throw createError('Selected time slot is already booked.', 409);
+  }
+
+  return {
+    appointmentDate,
+    department: doctor.department,
+    timeSlot,
+  };
+};
+
+const buildBookingData = (data, prepared) => ({
+  patientId: data.patientId || null,
+  guestPatient: data.guestPatient || null,
+  doctorId: data.doctorId,
+  department: prepared.department,
+  appointmentDate: prepared.appointmentDate,
+  timeSlot: prepared.timeSlot,
+  appointmentType: data.appointmentType,
+  notes: data.notes || '',
+});
+
+const createPublicAppointment = async (data) => {
+  if (data.patientId) {
+    throw createError(
+      'Public bookings must use guest patient details.',
+      400
+    );
+  }
+
+  ensureGuestPatient(data.guestPatient);
+  const prepared = await prepareBooking(data);
+  const appointment = await appointmentDao.createAppointment(
+    buildBookingData(data, prepared)
+  );
+
+  return appointmentDao.findAppointmentById(appointment._id);
+};
+
+const createStaffAppointment = async (data) => {
+  const hasPatientId = Boolean(data.patientId);
+  const hasGuestPatient = Boolean(data.guestPatient);
+
+  if (hasPatientId === hasGuestPatient) {
+    throw createError(
+      'Provide either patientId or guestPatient.',
+      400
+    );
+  }
+
+  if (hasPatientId) {
+    requireValidId(data.patientId, 'patient ID');
+    const patient = await appointmentDao.findActivePatient(data.patientId);
+
+    if (!patient) {
+      throw createError('Active patient account not found.', 404);
+    }
+  } else {
+    ensureGuestPatient(data.guestPatient);
+  }
+
+  const prepared = await prepareBooking(data);
+  const appointment = await appointmentDao.createAppointment(
+    buildBookingData(data, prepared)
+  );
+
+  return appointmentDao.findAppointmentById(appointment._id);
+};
+
+const buildListFilter = (query, actor) => {
+  const filter = {};
+
+  if (actor.role === 'Doctor') {
+    filter.doctorId = actor._id;
+  } else if (actor.role === 'Patient') {
+    filter.patientId = actor._id;
+  } else {
+    if (query.doctorId) {
+      requireValidId(query.doctorId, 'doctor ID');
+      filter.doctorId = query.doctorId;
+    }
+
+    if (query.patientId) {
+      requireValidId(query.patientId, 'patient ID');
+      filter.patientId = query.patientId;
+    }
+  }
+
+  if (query.status) {
+    if (!APPOINTMENT_STATUSES.includes(query.status)) {
+      throw createError('Invalid appointment status.', 400);
+    }
+
+    filter.status = query.status;
+  }
+
+  if (query.department) {
+    if (!DEPARTMENTS.includes(query.department)) {
+      throw createError('Invalid department.', 400);
+    }
+
+    filter.department = query.department;
+  }
+
+  if (query.date) {
+    filter.appointmentDate = parseDate(query.date);
+  }
+
+  return filter;
+};
+
+const getAppointments = async (query, actor) => {
+  const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+  const requestedLimit = Number.parseInt(query.limit, 10) || 20;
+  const limit = Math.min(Math.max(requestedLimit, 1), 100);
+  const filter = buildListFilter(query, actor);
+  const result = await appointmentDao.findAppointments(
+    filter,
+    page,
+    limit
+  );
+
+  return {
+    ...result,
+    page,
+    limit,
+    pages: Math.ceil(result.total / limit),
+  };
+};
+
+const canAccessAppointment = (appointment, actor) => {
+  if (staffRoles.includes(actor.role)) return true;
+
+  const patientId = appointment.patientId?._id || appointment.patientId;
+  const doctorId = appointment.doctorId?._id || appointment.doctorId;
+
+  if (actor.role === 'Patient') {
+    return patientId?.toString() === actor._id.toString();
+  }
+
+  if (actor.role === 'Doctor') {
+    return doctorId?.toString() === actor._id.toString();
+  }
+
+  return false;
+};
+
+const getAppointment = async (id, actor) => {
+  requireValidId(id, 'appointment ID');
+  const appointment = await appointmentDao.findAppointmentById(id);
+
+  if (!appointment) {
+    throw createError('Appointment not found.', 404);
+  }
+
+  if (!canAccessAppointment(appointment, actor)) {
+    throw createError('You cannot access this appointment.', 403);
+  }
+
+  return appointment;
+};
+
+const rescheduleAppointment = async (id, data) => {
+  requireValidId(id, 'appointment ID');
+  const appointment =
+    await appointmentDao.findAppointmentDocumentById(id);
+
+  if (!appointment) {
+    throw createError('Appointment not found.', 404);
+  }
+
+  if (appointment.status !== 'Pending') {
+    throw createError(
+      'Only pending appointments can be rescheduled.',
+      409
+    );
+  }
+
+  const bookingData = {
+    doctorId: data.doctorId || appointment.doctorId,
+    appointmentDate:
+      data.appointmentDate || appointment.appointmentDate,
+    timeSlot: data.timeSlot || appointment.timeSlot,
+    appointmentType:
+      data.appointmentType || appointment.appointmentType,
+  };
+
+  const prepared = await prepareBooking({
+    ...bookingData,
+    excludeId: appointment._id,
+  });
+
+  appointment.doctorId = bookingData.doctorId;
+  appointment.department = prepared.department;
+  appointment.appointmentDate = prepared.appointmentDate;
+  appointment.timeSlot = prepared.timeSlot;
+  appointment.appointmentType = bookingData.appointmentType;
+
+  if (data.notes !== undefined) {
+    appointment.notes = data.notes;
+  }
+
+  await appointment.save();
+  return appointmentDao.findAppointmentById(appointment._id);
+};
+
+const statusTransitions = {
+  Pending: ['Accepted', 'Rejected', 'Cancelled'],
+  Accepted: ['Completed', 'Cancelled'],
+  Rejected: [],
+  Completed: [],
+  Cancelled: [],
+};
+
+const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
+  if (staffRoles.includes(actor.role)) return;
+
+  if (actor.role === 'Patient') {
+    if (
+      appointment.patientId?.toString() === actor._id.toString() &&
+      nextStatus === 'Cancelled'
+    ) {
+      return;
+    }
+  }
+
+  if (actor.role === 'Doctor') {
+    const ownsAppointment =
+      appointment.doctorId.toString() === actor._id.toString();
+    const doctorStatus = ['Rejected', 'Completed'].includes(nextStatus);
+
+    if (ownsAppointment && doctorStatus) return;
+  }
+
+  throw createError(
+    'You cannot apply this appointment status.',
+    403
+  );
+};
+
+const updateAppointmentStatus = async (id, data, actor) => {
+  requireValidId(id, 'appointment ID');
+
+  if (!APPOINTMENT_STATUSES.includes(data.status)) {
+    throw createError('Invalid appointment status.', 400);
+  }
+
+  const appointment =
+    await appointmentDao.findAppointmentDocumentById(id);
+
+  if (!appointment) {
+    throw createError('Appointment not found.', 404);
+  }
+
+  ensureRoleCanSetStatus(appointment, actor, data.status);
+
+  if (!statusTransitions[appointment.status].includes(data.status)) {
+    throw createError(
+      `Cannot change ${appointment.status} to ${data.status}.`,
+      409
+    );
+  }
+
+  if (data.status === 'Rejected' && !data.rejectionReason?.trim()) {
+    throw createError('Rejection reason is required.', 400);
+  }
+
+  appointment.status = data.status;
+  appointment.rejectionReason =
+    data.status === 'Rejected' ? data.rejectionReason : '';
+
+  if (data.status === 'Completed') {
+    appointment.hasVisited = true;
+  }
+
+  await appointment.save();
+  return appointmentDao.findAppointmentById(appointment._id);
+};
+
+export default {
+  createPublicAppointment,
+  createStaffAppointment,
+  getAppointments,
+  getAppointment,
+  rescheduleAppointment,
+  updateAppointmentStatus,
+};
