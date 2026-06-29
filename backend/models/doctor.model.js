@@ -1,33 +1,6 @@
 import mongoose from 'mongoose';
-
-export const DEPARTMENTS = [
-  'Cardiology',
-  'Neurology',
-  'Orthopedics',
-  'Pediatrics',
-  'General Medicine',
-  'General Surgery',
-  'Obstetrics and Gynecology',
-  'Dermatology',
-  'ENT',
-  'Ophthalmology',
-  'Psychiatry',
-  'Urology',
-  'Nephrology',
-  'Oncology',
-  'Emergency Medicine',
-  'Anesthesiology',
-];
-
-export const WEEK_DAYS = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-];
+import { DEPARTMENTS } from '../constants/departments.const.js';
+import { WEEK_DAYS } from '../constants/weekdays.const.js';
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 

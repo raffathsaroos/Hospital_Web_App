@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { DEPARTMENTS } from './doctor.model.js';
+import { DEPARTMENTS } from '../constants/departments.const.js';
 
 export const APPOINTMENT_TYPES = [
   'OPD',
