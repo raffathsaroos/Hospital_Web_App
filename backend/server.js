@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/user.route.js';
 import patientRoutes from './routes/patient.route.js';
 import appointmentRoutes from './routes/appointment.route.js';
+import doctorRoutes from './routes/doctor.route.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ mongoose
 app.use('/api', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/doctors', doctorRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
