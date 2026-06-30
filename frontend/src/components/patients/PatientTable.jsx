@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 
+// Shows patient details with status, edit, and delete actions.
 export default function PatientTable({ patients, onDelete, onToggleStatus }) {
   return (
     <div className="rounded-md border">

@@ -5,6 +5,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 
+// Confirms a permanent patient deletion before it runs.
 export default function DeletePatientDialog({ open, onOpenChange, patientName, onConfirm, loading }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

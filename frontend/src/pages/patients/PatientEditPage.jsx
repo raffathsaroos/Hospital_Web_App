@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card'
 import { getPatientById, updatePatient } from '@/services/patientService'
 
+// Allows an empty password while checking all editable fields.
 const editSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName:  z.string().min(2, 'Last name must be at least 2 characters'),
@@ -30,6 +31,7 @@ const editSchema = z.object({
   password:  z.string().min(8, 'Password must be at least 8 characters').or(z.literal('')),
 })
 
+// Loads one patient and saves changes from the edit form.
 export default function PatientEditPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -49,6 +51,7 @@ export default function PatientEditPage() {
   })
 
   useEffect(() => {
+    // Fills the form with the patient's current account details.
     async function load() {
       const { data, error } = await getPatientById(id)
       if (error) { toast.error(error); return }
@@ -67,6 +70,7 @@ export default function PatientEditPage() {
     load()
   }, [id, form])
 
+  // Removes an unchanged password before updating the patient.
   async function onSubmit(values) {
     const payload = { ...values }
     if (!payload.password) delete payload.password

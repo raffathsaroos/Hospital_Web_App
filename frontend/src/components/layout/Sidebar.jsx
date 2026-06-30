@@ -6,6 +6,7 @@ const navItems = [
   { to: '/patients', label: 'Patients', icon: Users },
 ]
 
+// Shows the main hospital navigation and staff area.
 export default function Sidebar() {
   return (
     <aside className="flex w-[220px] flex-col bg-slate-900 text-slate-300">

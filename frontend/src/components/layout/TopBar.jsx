@@ -1,5 +1,6 @@
 import { Separator } from '@/components/ui/separator'
 
+// Displays a page title with optional action buttons.
 export default function TopBar({ title, children }) {
   return (
     <div className="mb-6">

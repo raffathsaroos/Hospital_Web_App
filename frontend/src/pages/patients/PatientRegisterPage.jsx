@@ -18,6 +18,7 @@ import {
 import { patientSchema } from '@/schemas/patient.schema'
 import { registerPatient } from '@/services/patientService'
 
+// Collects and validates details for a new patient account.
 export default function PatientRegisterPage() {
   const navigate = useNavigate()
 
@@ -35,6 +36,7 @@ export default function PatientRegisterPage() {
     },
   })
 
+  // Sends valid form details and returns to the patient list.
   async function onSubmit(values) {
     const { data, error } = await registerPatient(values)
     if (error) {

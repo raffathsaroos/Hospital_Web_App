@@ -15,6 +15,7 @@ import {
   setPatientStatus,
 } from '@/services/patientService'
 
+// Manages the patient list, status changes, and deletion flow.
 export default function PatientListPage() {
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,6 +24,7 @@ export default function PatientListPage() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
+    // Loads the patient table when the page first opens.
     async function fetchPatients() {
       const { data, error } = await getPatients()
       if (error) {
@@ -35,6 +37,7 @@ export default function PatientListPage() {
     fetchPatients()
   }, [])
 
+  // Deletes the selected patient and removes its table row.
   async function handleDelete(id) {
     setDeleteLoading(true)
     const { error } = await deletePatient(id)
@@ -48,6 +51,7 @@ export default function PatientListPage() {
     setDeleteTarget(null)
   }
 
+  // Updates a patient's active state without reloading the page.
   async function handleToggleStatus(id, currentIsActive) {
     const { data, error } = await setPatientStatus(id, !currentIsActive)
     if (error) {
@@ -62,6 +66,7 @@ export default function PatientListPage() {
     }
   }
 
+  // Finds the selected name shown in the delete warning.
   const deletePatientName = deleteTarget
     ? (() => {
         const p = patients.find((p) => p._id === deleteTarget)

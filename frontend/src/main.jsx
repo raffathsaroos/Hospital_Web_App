@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 import App from './App.jsx'
 
+// Starts the React app with routing and shared notifications.
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

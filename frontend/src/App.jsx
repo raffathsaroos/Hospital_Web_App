@@ -6,6 +6,7 @@ import PatientDetailPage from '@/pages/patients/PatientDetailPage'
 import PatientEditPage from '@/pages/patients/PatientEditPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
+// Maps browser paths to the matching hospital screens.
 export default function App() {
   return (
     <Routes>

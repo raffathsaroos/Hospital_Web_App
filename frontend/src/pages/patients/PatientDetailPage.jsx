@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getPatientById } from '@/services/patientService'
 
+// Displays one label and value in the patient detail grid.
 function DetailRow({ label, value }) {
   return (
     <div className="flex flex-col gap-1">
@@ -20,6 +21,7 @@ function DetailRow({ label, value }) {
   )
 }
 
+// Loads and displays the full record for one patient.
 export default function PatientDetailPage() {
   const { id } = useParams()
   const [patient, setPatient] = useState(null)
@@ -27,6 +29,7 @@ export default function PatientDetailPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    // Fetches the patient named in the current route.
     async function fetch() {
       const { data, error } = await getPatientById(id)
       if (error) setError(error)
