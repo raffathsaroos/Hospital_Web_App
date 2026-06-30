@@ -56,6 +56,40 @@ const getById = async (req, res) => {
   }
 };
 
+// Saves account and professional changes for one doctor.
+const update = async (req, res) => {
+  try {
+    const doctor = await doctorService.updateDoctor(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json({
+      message: 'Doctor updated successfully.',
+      doctor,
+    });
+  } catch (error) {
+    sendError(res, error);
+  }
+};
+
+// Changes whether a doctor account can be used.
+const setActiveStatus = async (req, res) => {
+  try {
+    const doctor = await doctorService.setDoctorActiveStatus(
+      req.params.id,
+      req.body.isActive
+    );
+
+    res.status(200).json({
+      message: `Doctor ${doctor.userId.isActive ? 'activated' : 'deactivated'} successfully.`,
+      doctor,
+    });
+  } catch (error) {
+    sendError(res, error);
+  }
+};
+
 // Soft deletes a doctor through account deactivation.
 const remove = async (req, res) => {
   try {
@@ -72,5 +106,7 @@ export default {
   create,
   getAll,
   getById,
+  update,
+  setActiveStatus,
   remove,
 };

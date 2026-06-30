@@ -7,6 +7,8 @@ const router = express.Router();
 router.get('/', doctorController.getAll);
 router.post('/', doctorController.create);
 router.get('/:id', doctorController.getById);
+router.put('/:id', doctorController.update);
+router.patch('/:id/status', doctorController.setActiveStatus);
 // Soft delete: this only deactivates the shared User account.
 router.delete('/:id', doctorController.remove);
 

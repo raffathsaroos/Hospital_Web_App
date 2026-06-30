@@ -31,9 +31,31 @@ const findActiveDoctorById = (id) =>
 const findDoctorById = (id) =>
   Doctor.findById(id).populate('userId', userFields);
 
+// Finds another doctor that uses the same license number.
+const findDoctorByLicense = (licenseNumber, excludeId) => {
+  const filter = {
+    licenseNumber: licenseNumber.trim().toUpperCase(),
+  };
+
+  if (excludeId) {
+    filter._id = { $ne: excludeId };
+  }
+
+  return Doctor.findOne(filter);
+};
+
+// Saves validated profile changes and returns the fresh doctor.
+const updateDoctorById = (id, doctorData) =>
+  Doctor.findByIdAndUpdate(id, doctorData, {
+    new: true,
+    runValidators: true,
+  });
+
 export default {
   createDoctor,
   findAllActiveDoctors,
   findActiveDoctorById,
   findDoctorById,
+  findDoctorByLicense,
+  updateDoctorById,
 };
