@@ -1,11 +1,12 @@
 import User from '../models/user.model.js';
 
-// Database access stays here so services can focus on business rules.
+// Finds an account by email and reveals its password only for login.
 const findUserByEmail = (email, includePassword = false) => {
   const query = User.findOne({ email: email.toLowerCase().trim() });
   return includePassword ? query.select('+password') : query;
 };
 
+// Finds a user that matches any unique identity field.
 const findUserByUniqueFields = ({ email, phone, nic }, excludeId) => {
   const conditions = [];
 
@@ -24,14 +25,17 @@ const findUserByUniqueFields = ({ email, phone, nic }, excludeId) => {
   return User.findOne(query);
 };
 
+// Inserts one user account.
 const createUser = (userData) => User.create(userData);
 
+// Saves validated changes and returns the fresh account.
 const updateUserById = (id, userData) =>
   User.findByIdAndUpdate(id, userData, {
     new: true,
     runValidators: true,
   });
 
+// Permanently removes one user account.
 const deleteUserById = (id) => User.findByIdAndDelete(id);
 
 export default {

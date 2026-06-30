@@ -1,3 +1,4 @@
+// Keeps department names the same across doctors and appointments.
 export const DEPARTMENTS = [
   'Cardiology',
   'Neurology',

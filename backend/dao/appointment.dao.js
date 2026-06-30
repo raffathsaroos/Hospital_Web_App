@@ -5,14 +5,17 @@ import User from '../models/user.model.js';
 const patientFields = 'firstName lastName email phone nic';
 const doctorFields = 'firstName lastName email phone';
 
+// Adds safe patient and doctor details to an appointment query.
 const populatePeople = (query) =>
   query
     .populate('patientId', patientFields)
     .populate('doctorId', doctorFields);
 
+// Inserts one appointment record.
 const createAppointment = (appointmentData) =>
   Appointment.create(appointmentData);
 
+// Returns a sorted appointment page and its full count.
 const findAppointments = async (filter, page, limit) => {
   const skip = (page - 1) * limit;
 
@@ -32,12 +35,15 @@ const findAppointments = async (filter, page, limit) => {
   };
 };
 
+// Finds one appointment with its patient and doctor details.
 const findAppointmentById = (id) =>
   populatePeople(Appointment.findById(id));
 
+// Finds the raw document needed for updates.
 const findAppointmentDocumentById = (id) =>
   Appointment.findById(id);
 
+// Looks for another active booking in the same slot.
 const findSlotConflict = ({
   doctorId,
   appointmentDate,
@@ -62,12 +68,14 @@ const findSlotConflict = ({
   return Appointment.findOne(filter);
 };
 
+// Loads the doctor schedule linked to a user account.
 const findDoctorProfile = (userId) =>
   Doctor.findOne({ userId }).populate(
     'userId',
     'firstName lastName role isActive'
   );
 
+// Confirms that a patient account exists and is active.
 const findActivePatient = (id) =>
   User.findOne({
     _id: id,

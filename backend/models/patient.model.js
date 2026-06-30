@@ -15,6 +15,7 @@ const PatientSchema = new mongoose.Schema(
   }
 );
 
+// Registers the patient profile schema with Mongoose.
 const Patient = mongoose.model('Patient', PatientSchema);
 
 export default Patient;

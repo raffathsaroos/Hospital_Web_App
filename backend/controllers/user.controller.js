@@ -1,6 +1,6 @@
 import userService from '../services/user.services.js';
 
-// Controllers translate HTTP requests into service calls and responses.
+// Sends a signup request through the account service.
 const signup = async (req, res) => {
 	try {
 		const result = await userService.signupUser(req.body);
@@ -12,6 +12,7 @@ const signup = async (req, res) => {
 	}
 };
 
+// Returns account details after a valid login.
 const login = async (req, res) => {
 	try {
 		const result = await userService.loginUser(req.body);

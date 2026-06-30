@@ -1,6 +1,6 @@
 import patientService from '../services/patient.services.js';
 
-// Keep patient API errors consistent and useful to the frontend.
+// Turns patient failures into useful API responses.
 const sendError = (res, error) => {
   if (error.name === 'CastError') {
     return res.status(400).json({ message: 'Invalid patient ID.' });
@@ -23,6 +23,7 @@ const sendError = (res, error) => {
   });
 };
 
+// Registers a patient account and profile.
 const register = async (req, res) => {
   try {
     const patient = await patientService.registerPatient(req.body);
@@ -35,6 +36,7 @@ const register = async (req, res) => {
   }
 };
 
+// Returns every patient record for the management list.
 const getAll = async (req, res) => {
   try {
     const patients = await patientService.getPatients();
@@ -44,6 +46,7 @@ const getAll = async (req, res) => {
   }
 };
 
+// Returns one patient selected by profile ID.
 const getById = async (req, res) => {
   try {
     const patient = await patientService.getPatient(req.params.id);
@@ -53,6 +56,7 @@ const getById = async (req, res) => {
   }
 };
 
+// Saves allowed changes to a patient's account details.
 const update = async (req, res) => {
   try {
     const patient = await patientService.updatePatient(req.params.id, req.body);
@@ -65,6 +69,7 @@ const update = async (req, res) => {
   }
 };
 
+// Enables or disables a patient account.
 const setActiveStatus = async (req, res) => {
   try {
     if (typeof req.body.isActive !== 'boolean') {
@@ -85,6 +90,7 @@ const setActiveStatus = async (req, res) => {
   }
 };
 
+// Permanently removes a patient and linked account.
 const remove = async (req, res) => {
   try {
     await patientService.deletePatient(req.params.id);

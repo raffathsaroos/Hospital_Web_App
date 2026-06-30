@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 // Common account and profile fields shared by every user role.
+// Stores personal details shared by every hospital role.
 const UserSchema = new mongoose.Schema(
   {
     firstName: {
@@ -98,8 +99,10 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
+// Speeds up lists that group accounts by hospital role.
 UserSchema.index({ role: 1 });
 
+// Registers the shared account schema with Mongoose.
 const User = mongoose.model('User', UserSchema);
 
 export default User;

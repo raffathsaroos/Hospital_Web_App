@@ -18,17 +18,20 @@ const editableUserFields = [
   'avatar',
 ];
 
+// Builds an error with the status expected by the API.
 const createError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Copies only fields that the patient API accepts.
 const pickFields = (data, allowedFields) =>
   Object.fromEntries(
     Object.entries(data).filter(([key]) => allowedFields.includes(key))
   );
 
+// Makes sure identity fields do not belong to another user.
 const ensureUniqueUser = async (userData, excludeId) => {
   const existingUser = await userDao.findUserByUniqueFields(userData, excludeId);
 
@@ -48,6 +51,7 @@ const ensureUniqueUser = async (userData, excludeId) => {
   throw createError('A user with this NIC already exists.', 409);
 };
 
+// Creates a patient account and profile as one workflow.
 const registerPatient = async (patientData) => {
   const userData = pickFields(patientData, registrationUserFields);
 
@@ -69,8 +73,10 @@ const registerPatient = async (patientData) => {
   }
 };
 
+// Returns every patient with the linked account details.
 const getPatients = () => patientDao.findAllPatients();
 
+// Finds one patient or raises a clear missing-record error.
 const getPatient = async (id) => {
   const patient = await patientDao.findPatientById(id);
 
@@ -81,6 +87,7 @@ const getPatient = async (id) => {
   return patient;
 };
 
+// Updates the shared account fields for one patient.
 const updatePatient = async (id, patientData) => {
   const patient = await getPatient(id);
   const updates = pickFields(patientData, editableUserFields);
@@ -91,6 +98,7 @@ const updatePatient = async (id, patientData) => {
   return patientDao.findPatientById(id);
 };
 
+// Enables or disables the patient's user account.
 const setPatientActiveStatus = async (id, isActive) => {
   const patient = await getPatient(id);
 
@@ -98,6 +106,7 @@ const setPatientActiveStatus = async (id, isActive) => {
   return patientDao.findPatientById(id);
 };
 
+// Removes both the patient profile and its user account.
 const deletePatient = async (id) => {
   const patient = await getPatient(id);
 

@@ -1,25 +1,26 @@
 import User from "../models/user.model.js";
 import { verifyToken } from "../utils/jwt.js";
 
+// Loads the active user named by a valid bearer token.
 export const authenticate = async (req, res, next) => {
 	try {
-		// 1. Read Authorization header
+		// Read the token sent by the API client.
 		const authHeader = req.headers.authorization;
 
-		// 2. Check Bearer token format
+		// Reject missing tokens and unsupported header formats.
 		if (!authHeader || !authHeader.startsWith("Bearer ")) {
 			return res.status(401).json({
 				message: "Authentication required. Please login.",
 			});
 		}
 
-		// 3. Extract token
+		// Keep only the signed token value.
 		const token = authHeader.split(" ")[1];
 
-		// 4. Verify token
+		// Decode trusted identity data from the token.
 		const decoded = verifyToken(token);
 
-		// 5. Find current user from database
+		// Reload the account so old token data cannot bypass changes.
 		const user = await User.findById(decoded.userId);
 
 		if (!user) {
@@ -28,14 +29,14 @@ export const authenticate = async (req, res, next) => {
 			});
 		}
 
-		// 6. Reject inactive user
+		// Disabled accounts lose access at once.
 		if (!user.isActive) {
 			return res.status(401).json({
 				message: "User account is inactive.",
 			});
 		}
 
-		// 7. Attach user to request
+		// Share the verified account with later middleware.
 		req.user = user;
 
 		next();

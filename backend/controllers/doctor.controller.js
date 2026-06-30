@@ -1,5 +1,6 @@
 import doctorService from '../services/doctor.services.js';
 
+// Turns doctor errors into clear API responses.
 const sendError = (res, error) => {
   if (error.name === 'CastError') {
     return res.status(400).json({ message: 'Invalid doctor ID.' });
@@ -22,6 +23,7 @@ const sendError = (res, error) => {
   });
 };
 
+// Creates a doctor from the submitted account and profile data.
 const create = async (req, res) => {
   try {
     const doctor = await doctorService.addDoctor(req.body);
@@ -34,6 +36,7 @@ const create = async (req, res) => {
   }
 };
 
+// Returns all doctors visible to the directory.
 const getAll = async (_req, res) => {
   try {
     const doctors = await doctorService.getDoctors();
@@ -43,6 +46,7 @@ const getAll = async (_req, res) => {
   }
 };
 
+// Returns one doctor selected by profile ID.
 const getById = async (req, res) => {
   try {
     const doctor = await doctorService.getDoctor(req.params.id);
@@ -52,6 +56,7 @@ const getById = async (req, res) => {
   }
 };
 
+// Soft deletes a doctor through account deactivation.
 const remove = async (req, res) => {
   try {
     await doctorService.deactivateDoctor(req.params.id);

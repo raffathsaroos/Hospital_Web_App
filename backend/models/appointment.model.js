@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
 import { DEPARTMENTS } from '../constants/departments.const.js';
 
+// Lists the visit types accepted during booking.
 export const APPOINTMENT_TYPES = [
   'OPD',
   'IPD',
   'Emergency',
 ];
 
+// Defines every stage in the appointment workflow.
 export const APPOINTMENT_STATUSES = [
   'Pending',
   'Accepted',
@@ -183,6 +185,7 @@ AppointmentSchema.pre('save', function syncSlotReservation() {
   this.isSlotReserved = ['Pending', 'Accepted'].includes(this.status);
 });
 
+// Registers the booking schema with Mongoose.
 const Appointment = mongoose.model(
   'Appointment',
   AppointmentSchema

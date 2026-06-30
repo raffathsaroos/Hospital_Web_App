@@ -1,6 +1,6 @@
 import appointmentService from '../services/appointment.services.js';
 
-// Keep appointment errors predictable for both public and staff screens.
+// Turns appointment failures into stable API responses.
 const sendError = (res, error) => {
   if (error.name === 'ValidationError') {
     const errors = Object.values(error.errors).map(
@@ -30,6 +30,7 @@ const sendError = (res, error) => {
   });
 };
 
+// Accepts an appointment request from a guest patient.
 const createPublic = async (req, res) => {
   try {
     const appointment =
@@ -44,6 +45,7 @@ const createPublic = async (req, res) => {
   }
 };
 
+// Lets hospital staff create an appointment for a patient.
 const createByStaff = async (req, res) => {
   try {
     const appointment =
@@ -58,6 +60,7 @@ const createByStaff = async (req, res) => {
   }
 };
 
+// Returns the appointment page allowed for the current user.
 const getAll = async (req, res) => {
   try {
     const result = await appointmentService.getAppointments(
@@ -71,6 +74,7 @@ const getAll = async (req, res) => {
   }
 };
 
+// Returns one appointment after service access checks.
 const getById = async (req, res) => {
   try {
     const appointment = await appointmentService.getAppointment(
@@ -84,6 +88,7 @@ const getById = async (req, res) => {
   }
 };
 
+// Moves a pending appointment to a new date or slot.
 const reschedule = async (req, res) => {
   try {
     const appointment =
@@ -101,6 +106,7 @@ const reschedule = async (req, res) => {
   }
 };
 
+// Applies an allowed appointment status change.
 const updateStatus = async (req, res) => {
   try {
     const appointment =

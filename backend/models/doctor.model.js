@@ -76,6 +76,7 @@ const DoctorSchema = new mongoose.Schema(
     qualifications: {
       type: [String],
       default: [],
+      // Removes extra space from every saved qualification.
       set: (values) => values.map((value) => value.trim()),
     },
     experience: {
@@ -113,6 +114,7 @@ const DoctorSchema = new mongoose.Schema(
 // Supports the public doctor list and receptionist availability filters.
 DoctorSchema.index({ department: 1, isAvailable: 1 });
 
+// Registers the doctor profile schema with Mongoose.
 const Doctor = mongoose.model('Doctor', DoctorSchema);
 
 export default Doctor;

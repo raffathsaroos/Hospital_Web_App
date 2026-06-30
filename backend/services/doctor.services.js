@@ -25,17 +25,20 @@ const doctorProfileFields = [
   'isAvailable',
 ];
 
+// Builds an error with a response status for the controller.
 const createError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Copies only fields accepted by the doctor workflow.
 const pickFields = (data, allowedFields) =>
   Object.fromEntries(
     Object.entries(data).filter(([key]) => allowedFields.includes(key))
   );
 
+// Prevents a doctor from sharing another user's identity details.
 const ensureUniqueUser = async (userData) => {
   const existingUser = await userDao.findUserByUniqueFields(userData);
 
@@ -55,6 +58,7 @@ const ensureUniqueUser = async (userData) => {
   throw createError('A user with this NIC already exists.', 409);
 };
 
+// Creates the user account and linked doctor profile together.
 const addDoctor = async (doctorData) => {
   const userData = pickFields(doctorData, registrationUserFields);
   const profileData = pickFields(doctorData, doctorProfileFields);
@@ -80,8 +84,10 @@ const addDoctor = async (doctorData) => {
   }
 };
 
+// Lists doctors whose user accounts are still active.
 const getDoctors = () => doctorDao.findAllActiveDoctors();
 
+// Returns one active doctor or reports that it is missing.
 const getDoctor = async (id) => {
   const doctor = await doctorDao.findActiveDoctorById(id);
 
@@ -92,6 +98,7 @@ const getDoctor = async (id) => {
   return doctor;
 };
 
+// Hides a doctor by disabling the linked user account.
 const deactivateDoctor = async (id) => {
   const doctor = await doctorDao.findDoctorById(id);
 

@@ -1,6 +1,6 @@
 import userDao from '../dao/user.dao.js';
 
-// Services handle account rules before asking the DAO to access MongoDB.
+// Creates a user only when the email is not registered.
 const signupUser = async (userData) => {
 	const existingUser = await userDao.findUserByEmail(userData.email);
 
@@ -23,6 +23,7 @@ const signupUser = async (userData) => {
 	};
 };
 
+// Checks basic credentials and returns safe account details.
 const loginUser = async ({ email, password }) => {
 	const user = await userDao.findUserByEmail(email, true);
 

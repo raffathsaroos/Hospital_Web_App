@@ -10,20 +10,24 @@ const staffRoles = ['Admin', 'Receptionist'];
 const timeSlotPattern =
   /^([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d$/;
 
+// Builds an error with the HTTP status the controller should return.
 const createError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Checks whether a value can be used as a MongoDB ID.
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// Stops the request early when an ID has the wrong shape.
 const requireValidId = (id, label) => {
   if (!isValidId(id)) {
     throw createError(`Invalid ${label}.`, 400);
   }
 };
 
+// Turns a date input into one UTC calendar day.
 const parseDate = (value) => {
   const date = new Date(value);
 
@@ -35,6 +39,7 @@ const parseDate = (value) => {
   return date;
 };
 
+// Keeps new bookings from being placed on an earlier day.
 const ensureFutureDate = (date) => {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -44,11 +49,13 @@ const ensureFutureDate = (date) => {
   }
 };
 
+// Converts a clock value into minutes for easy comparison.
 const toMinutes = (time) => {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
 };
 
+// Reads and checks the start and end of one booking slot.
 const parseTimeSlot = (timeSlot) => {
   if (!timeSlotPattern.test(timeSlot || '')) {
     throw createError(
@@ -71,6 +78,7 @@ const parseTimeSlot = (timeSlot) => {
   };
 };
 
+// Checks the fields shared by every booking request.
 const ensureRequiredBookingFields = (data) => {
   const requiredFields = [
     'doctorId',
@@ -90,6 +98,7 @@ const ensureRequiredBookingFields = (data) => {
   }
 };
 
+// Checks the minimum details needed for a guest booking.
 const ensureGuestPatient = (guestPatient) => {
   if (!guestPatient || typeof guestPatient !== 'object') {
     throw createError('Guest patient details are required.', 400);
@@ -108,6 +117,7 @@ const ensureGuestPatient = (guestPatient) => {
   }
 };
 
+// Finds the weekday name used by doctor schedules.
 const getWeekDay = (date) =>
   [
     'Sunday',
@@ -119,6 +129,7 @@ const getWeekDay = (date) =>
     'Saturday',
   ][date.getUTCDay()];
 
+// Confirms that a requested slot fits the doctor's schedule.
 const ensureAvailableSlot = (doctor, date, timeSlot) => {
   if (!doctor || !doctor.isAvailable) {
     throw createError('Doctor is not available for booking.', 409);
@@ -155,6 +166,7 @@ const ensureAvailableSlot = (doctor, date, timeSlot) => {
   }
 };
 
+// Validates a booking and gathers its trusted schedule values.
 const prepareBooking = async (data) => {
   ensureRequiredBookingFields(data);
   requireValidId(data.doctorId, 'doctor ID');
@@ -184,6 +196,7 @@ const prepareBooking = async (data) => {
   };
 };
 
+// Keeps only the fields stored on a new appointment.
 const buildBookingData = (data, prepared) => ({
   patientId: data.patientId || null,
   guestPatient: data.guestPatient || null,
@@ -195,6 +208,7 @@ const buildBookingData = (data, prepared) => ({
   notes: data.notes || '',
 });
 
+// Creates an appointment for a patient without an account.
 const createPublicAppointment = async (data) => {
   if (data.patientId) {
     throw createError(
@@ -212,6 +226,7 @@ const createPublicAppointment = async (data) => {
   return appointmentDao.findAppointmentById(appointment._id);
 };
 
+// Creates a booking entered by hospital staff.
 const createStaffAppointment = async (data) => {
   const hasPatientId = Boolean(data.patientId);
   const hasGuestPatient = Boolean(data.guestPatient);
@@ -242,6 +257,7 @@ const createStaffAppointment = async (data) => {
   return appointmentDao.findAppointmentById(appointment._id);
 };
 
+// Builds a safe appointment filter for the current user's role.
 const buildListFilter = (query, actor) => {
   const filter = {};
 
@@ -284,6 +300,7 @@ const buildListFilter = (query, actor) => {
   return filter;
 };
 
+// Returns one page of appointments the user may view.
 const getAppointments = async (query, actor) => {
   const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
   const requestedLimit = Number.parseInt(query.limit, 10) || 20;
@@ -303,6 +320,7 @@ const getAppointments = async (query, actor) => {
   };
 };
 
+// Checks whether the current user owns or manages an appointment.
 const canAccessAppointment = (appointment, actor) => {
   if (staffRoles.includes(actor.role)) return true;
 
@@ -320,6 +338,7 @@ const canAccessAppointment = (appointment, actor) => {
   return false;
 };
 
+// Finds one appointment after checking access rights.
 const getAppointment = async (id, actor) => {
   requireValidId(id, 'appointment ID');
   const appointment = await appointmentDao.findAppointmentById(id);
@@ -335,6 +354,7 @@ const getAppointment = async (id, actor) => {
   return appointment;
 };
 
+// Moves a pending appointment to another valid slot.
 const rescheduleAppointment = async (id, data) => {
   requireValidId(id, 'appointment ID');
   const appointment =
@@ -387,6 +407,7 @@ const statusTransitions = {
   Cancelled: [],
 };
 
+// Checks whether a role may apply the requested status.
 const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
   if (staffRoles.includes(actor.role)) return;
 
@@ -413,6 +434,7 @@ const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
   );
 };
 
+// Applies a valid status change and its related details.
 const updateAppointmentStatus = async (id, data, actor) => {
   requireValidId(id, 'appointment ID');
 
