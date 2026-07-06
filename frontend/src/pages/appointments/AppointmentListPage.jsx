@@ -30,6 +30,126 @@ const roleActions = {
   Patient: { Pending: ["Cancelled"], Confirmed: ["Cancelled"] },
 };
 
+function DoctorQueueSections({ appointments, onStatusChange }) {
+  const waiting = appointments.filter((appointment) =>
+    ["Pending", "Confirmed", "Paid"].includes(appointment.status),
+  );
+  const diagnosed = appointments.filter(
+    (appointment) => appointment.status === "Diagnosed",
+  );
+
+  return (
+    <div className="space-y-8">
+      <DoctorQueueSection
+        title="Waiting for Diagnosis"
+        description="Active patients who have not been diagnosed yet."
+        appointments={waiting}
+        emptyMessage="No patients are waiting for diagnosis."
+        onStatusChange={onStatusChange}
+      />
+      <DoctorQueueSection
+        title="Diagnosed Patients"
+        description="Patients whose consultation and diagnosis are complete."
+        appointments={diagnosed}
+        emptyMessage="No diagnosed patients are available."
+        onStatusChange={onStatusChange}
+      />
+    </div>
+  );
+}
+
+function DoctorQueueSection({
+  title,
+  description,
+  appointments,
+  emptyMessage,
+  onStatusChange,
+}) {
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+        <p className="text-sm text-slate-500">{description}</p>
+      </div>
+      {appointments.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-slate-500">
+            {emptyMessage}
+          </CardContent>
+        </Card>
+      ) : (
+        appointments.map((appointment) => (
+          <DoctorAppointmentCard
+            key={appointment._id}
+            appointment={appointment}
+            onStatusChange={onStatusChange}
+          />
+        ))
+      )}
+    </section>
+  );
+}
+
+function DoctorAppointmentCard({ appointment, onStatusChange }) {
+  const patient = appointment.patientId ?? appointment.guestPatient;
+  const actions = roleActions.Doctor[appointment.status] ?? [];
+
+  return (
+    <Card className="border-slate-200">
+      <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto] lg:items-center">
+        <div>
+          <p className="font-semibold text-slate-900">
+            {patient
+              ? `${patient.firstName} ${patient.lastName}`
+              : "Guest patient"}
+          </p>
+          <p className="text-sm text-slate-500">
+            {appointment.department} · {appointment.appointmentType}
+          </p>
+        </div>
+        <div className="text-sm text-slate-600">
+          <p className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-blue-600" />
+            {new Date(appointment.appointmentDate).toLocaleDateString()}
+          </p>
+          <p className="mt-1 flex items-center gap-2">
+            <Clock3 className="h-4 w-4 text-orange-600" />
+            {appointment.timeSlot}
+          </p>
+        </div>
+        <Badge
+          variant="outline"
+          className="w-fit border-blue-300 bg-blue-50 text-blue-700"
+        >
+          {appointment.status}
+        </Badge>
+        <div className="flex flex-wrap justify-end gap-2">
+          {appointment.status === "Paid" && (
+            <Button asChild size="sm">
+              <Link to={`/clinical/${appointment._id}`}>Diagnose patient</Link>
+            </Button>
+          )}
+          {appointment.status === "Diagnosed" && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/reports">View report</Link>
+            </Button>
+          )}
+          {actions.map((status) => (
+            <Button
+              key={status}
+              size="sm"
+              variant="outline"
+              onClick={() => onStatusChange(appointment, status)}
+            >
+              <XCircle /> {status}
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Presents only the status transitions permitted for the signed-in user's role.
 export default function AppointmentListPage() {
   const { user } = useAuth();
@@ -112,91 +232,104 @@ export default function AppointmentListPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {!loading && !error && orderedAppointments.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center py-12 text-center text-slate-500">
-            <CalendarDays className="mb-3 h-8 w-8 text-blue-500" />
-            No appointments are available.
-          </CardContent>
-        </Card>
+      {!loading &&
+        !error &&
+        orderedAppointments.length === 0 &&
+        user?.role !== "Doctor" && (
+          <Card>
+            <CardContent className="flex flex-col items-center py-12 text-center text-slate-500">
+              <CalendarDays className="mb-3 h-8 w-8 text-blue-500" />
+              No appointments are available.
+            </CardContent>
+          </Card>
+        )}
+      {user?.role === "Doctor" && !loading && !error && (
+        <DoctorQueueSections
+          appointments={orderedAppointments}
+          onStatusChange={changeStatus}
+        />
       )}
-      <div className="space-y-3">
-        {orderedAppointments.map((appointment) => {
-          const patient = appointment.patientId ?? appointment.guestPatient;
-          const doctor = appointment.doctorId;
-          const actions = roleActions[user?.role]?.[appointment.status] ?? [];
-          return (
-            <Card key={appointment._id} className="border-slate-200">
-              <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto] lg:items-center">
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    {patient
-                      ? `${patient.firstName} ${patient.lastName}`
-                      : "Guest patient"}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {appointment.department} · {appointment.appointmentType}
-                  </p>
-                </div>
-                <div className="text-sm text-slate-600">
-                  <p className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-blue-600" />
-                    {new Date(appointment.appointmentDate).toLocaleDateString()}
-                  </p>
-                  <p className="mt-1 flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-orange-600" />
-                    {appointment.timeSlot}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">
-                    Dr. {doctor?.firstName} {doctor?.lastName}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className={
-                      appointment.status === "Pending"
-                        ? "mt-2 border-orange-300 bg-orange-50 text-orange-700"
-                        : "mt-2 border-blue-300 bg-blue-50 text-blue-700"
-                    }
-                  >
-                    {appointment.status}
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap justify-end gap-2">
-                  {user?.role === "Doctor" &&
-                    ["Paid", "Diagnosed"].includes(appointment.status) && (
-                      <Button asChild size="sm">
-                        <Link to={`/clinical/${appointment._id}`}>
-                          Clinical report
-                        </Link>
-                      </Button>
-                    )}
-                  {actions.map((status) => (
-                    <Button
-                      key={status}
-                      size="sm"
-                      variant={
-                        status === "Rejected" || status === "Cancelled"
-                          ? "outline"
-                          : "default"
+      {user?.role !== "Doctor" && (
+        <div className="space-y-3">
+          {orderedAppointments.map((appointment) => {
+            const patient = appointment.patientId ?? appointment.guestPatient;
+            const doctor = appointment.doctorId;
+            const actions = roleActions[user?.role]?.[appointment.status] ?? [];
+            return (
+              <Card key={appointment._id} className="border-slate-200">
+                <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr_1fr_auto] lg:items-center">
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {patient
+                        ? `${patient.firstName} ${patient.lastName}`
+                        : "Guest patient"}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {appointment.department} · {appointment.appointmentType}
+                    </p>
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    <p className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-blue-600" />
+                      {new Date(
+                        appointment.appointmentDate,
+                      ).toLocaleDateString()}
+                    </p>
+                    <p className="mt-1 flex items-center gap-2">
+                      <Clock3 className="h-4 w-4 text-orange-600" />
+                      {appointment.timeSlot}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">
+                      Dr. {doctor?.firstName} {doctor?.lastName}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={
+                        appointment.status === "Pending"
+                          ? "mt-2 border-orange-300 bg-orange-50 text-orange-700"
+                          : "mt-2 border-blue-300 bg-blue-50 text-blue-700"
                       }
-                      onClick={() => changeStatus(appointment, status)}
                     >
-                      {["Confirmed", "Paid", "Diagnosed"].includes(status) ? (
-                        <CheckCircle2 />
-                      ) : (
-                        <XCircle />
+                      {appointment.status}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {user?.role === "Doctor" &&
+                      ["Paid", "Diagnosed"].includes(appointment.status) && (
+                        <Button asChild size="sm">
+                          <Link to={`/clinical/${appointment._id}`}>
+                            Clinical report
+                          </Link>
+                        </Button>
                       )}
-                      {status}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    {actions.map((status) => (
+                      <Button
+                        key={status}
+                        size="sm"
+                        variant={
+                          status === "Rejected" || status === "Cancelled"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => changeStatus(appointment, status)}
+                      >
+                        {["Confirmed", "Paid", "Diagnosed"].includes(status) ? (
+                          <CheckCircle2 />
+                        ) : (
+                          <XCircle />
+                        )}
+                        {status}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
       <ConfirmActionDialog
         open={Boolean(pendingAction)}
         onOpenChange={(open) => !open && setPendingAction(null)}
