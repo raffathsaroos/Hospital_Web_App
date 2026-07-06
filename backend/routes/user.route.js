@@ -5,6 +5,12 @@ import { authorize } from '../middleware/authorize.middleware.js';
 
 const router = express.Router();
 router.post('/login', userController.login);
+router.get(
+  '/me',
+  authenticate,
+  authorize('Patient', 'Doctor', 'Receptionist', 'Lab Operator', 'Radiologist', 'Pharmacist'),
+  userController.getMe
+);
 router.use('/users', authenticate, authorize('Admin'));
 router.post('/users', userController.create);
 router.get('/users', userController.getAll);

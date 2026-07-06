@@ -1,5 +1,6 @@
 import doctorDao from '../dao/doctor.dao.js';
 import userDao from '../dao/user.dao.js';
+import { WEEK_DAYS } from '../constants/weekdays.const.js';
 
 const registrationUserFields = [
   'firstName',
@@ -155,6 +156,72 @@ const updateDoctor = async (id, doctorData) => {
   return doctorDao.findDoctorById(doctor._id);
 };
 
+// Updates only appointment availability fields for administrators and receptionists.
+const updateDoctorSchedule = async (id, scheduleData) => {
+  const doctor = await doctorDao.findDoctorById(id);
+
+  if (!doctor || !doctor.userId) {
+    throw createError('Doctor not found.', 404);
+  }
+
+  if (!Array.isArray(scheduleData.availableTimeSlots)) {
+    throw createError('Available time slots must be an array.', 400);
+  }
+
+  if (typeof scheduleData.isAvailable !== 'boolean') {
+    throw createError('isAvailable must be true or false.', 400);
+  }
+
+  const availableTimeSlots = scheduleData.availableTimeSlots.map((slot) => ({
+    day: slot.day,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    slotDurationMinutes: Number(slot.slotDurationMinutes),
+  }));
+
+  for (const slot of availableTimeSlots) {
+    if (!WEEK_DAYS.includes(slot.day)) {
+      throw createError('Each time slot must use a valid weekday.', 400);
+    }
+
+    if (!slot.startTime || !slot.endTime || slot.endTime <= slot.startTime) {
+      throw createError('Each time slot must end after it starts.', 400);
+    }
+
+    if (!Number.isInteger(slot.slotDurationMinutes)) {
+      throw createError('Slot duration must be a whole number of minutes.', 400);
+    }
+  }
+
+  for (const day of WEEK_DAYS) {
+    const slots = availableTimeSlots
+      .filter((slot) => slot.day === day)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    for (let index = 1; index < slots.length; index += 1) {
+      if (slots[index].startTime < slots[index - 1].endTime) {
+        throw createError(`Time slots overlap on ${day}.`, 400);
+      }
+    }
+  }
+
+  const availableDays = WEEK_DAYS.filter((day) =>
+    availableTimeSlots.some((slot) => slot.day === day)
+  );
+
+  if (scheduleData.isAvailable && availableTimeSlots.length === 0) {
+    throw createError('Add at least one time slot before making the doctor available.', 400);
+  }
+
+  await doctorDao.updateDoctorById(doctor._id, {
+    availableDays,
+    availableTimeSlots,
+    isAvailable: scheduleData.isAvailable,
+  });
+
+  return doctorDao.findDoctorById(doctor._id);
+};
+
 // Enables or disables the account linked to one doctor.
 const setDoctorActiveStatus = async (id, isActive) => {
   if (typeof isActive !== 'boolean') {
@@ -197,6 +264,7 @@ export default {
   getDoctor,
   getDoctorForAdmin,
   updateDoctor,
+  updateDoctorSchedule,
   setDoctorActiveStatus,
   deactivateDoctor,
 };

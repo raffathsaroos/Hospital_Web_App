@@ -1,5 +1,6 @@
 import { call, http } from './api'
 
+export const getMyProfile = () => call(() => http.get('/me'))
 export const createUser = (body) => call(() => http.post('/users', body))
 export const createPatient = (body) => call(() => http.post('/patients', body))
 export const createDoctor = (body) => call(() => http.post('/doctors', body))

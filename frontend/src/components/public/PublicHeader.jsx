@@ -11,7 +11,7 @@ export default function PublicHeader() {
             <Hospital className="h-6 w-6" />
           </span>
           <span>
-            <span className="block text-lg font-bold leading-none">MediCare HMS</span>
+            <span className="block text-lg font-bold leading-none">New Hospital</span>
             <span className="text-xs text-slate-500">Care that connects</span>
           </span>
         </Link>

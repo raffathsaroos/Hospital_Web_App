@@ -15,7 +15,9 @@ const safeUser = (user) => ({
   gender: user.gender,
   role: user.role,
   isActive: user.isActive,
+  avatar: user.avatar,
   lastLogin: user.lastLogin,
+  createdAt: user.createdAt,
 });
 
 const loginUser = async ({ email, password }) => {

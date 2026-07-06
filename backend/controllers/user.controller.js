@@ -12,10 +12,11 @@ const handle = (fn) => async (req, res) => {
 };
 
 const login = handle(async (req, res) => res.json(await userService.loginUser(req.body)));
+const getMe = handle(async (req, res) => res.json({ user: await userService.getUser(req.user._id) }));
 const create = handle(async (req, res) => res.status(201).json({ message: 'User created successfully.', user: await userService.createUser(req.body) }));
 const getAll = handle(async (req, res) => { const users = await userService.getUsers(req.query); res.json({ count: users.length, users }); });
 const getById = handle(async (req, res) => res.json({ user: await userService.getUser(req.params.id) }));
 const update = handle(async (req, res) => res.json({ message: 'User updated successfully.', user: await userService.updateUser(req.params.id, req.body) }));
 const setStatus = handle(async (req, res) => res.json({ message: 'User status updated successfully.', user: await userService.setUserStatus(req.params.id, req.body.isActive, req.user._id) }));
 
-export default { login, create, getAll, getById, update, setStatus };
+export default { login, getMe, create, getAll, getById, update, setStatus };

@@ -87,6 +87,23 @@ const update = async (req, res) => {
   }
 };
 
+// Lets scheduling staff change availability without editing doctor details.
+const updateSchedule = async (req, res) => {
+  try {
+    const doctor = await doctorService.updateDoctorSchedule(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json({
+      message: 'Doctor schedule updated successfully.',
+      doctor,
+    });
+  } catch (error) {
+    sendError(res, error);
+  }
+};
+
 // Changes whether a doctor account can be used.
 const setActiveStatus = async (req, res) => {
   try {
@@ -123,6 +140,7 @@ export default {
   getByIdForAdmin,
   getById,
   update,
+  updateSchedule,
   setActiveStatus,
   remove,
 };

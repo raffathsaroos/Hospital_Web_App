@@ -11,6 +11,8 @@ import UnauthorizedPage from '@/pages/UnauthorizedPage'
 import UserCreatePage from '@/pages/users/UserCreatePage'
 import DoctorListPage from '@/pages/doctors/DoctorListPage'
 import DoctorEditPage from '@/pages/doctors/DoctorEditPage'
+import DoctorScheduleListPage from '@/pages/doctors/DoctorScheduleListPage'
+import DoctorSchedulePage from '@/pages/doctors/DoctorSchedulePage'
 import StaffListPage from '@/pages/users/StaffListPage'
 import StaffEditPage from '@/pages/users/StaffEditPage'
 import PatientListPage from '@/pages/patients/PatientListPage'
@@ -18,6 +20,7 @@ import PatientRegisterPage from '@/pages/patients/PatientRegisterPage'
 import PatientDetailPage from '@/pages/patients/PatientDetailPage'
 import PatientEditPage from '@/pages/patients/PatientEditPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import MyProfilePage from '@/pages/users/MyProfilePage'
 
 // Maps browser paths to the matching hospital screens.
 export default function App() {
@@ -30,6 +33,9 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route element={<RoleRoute roles={['Patient', 'Doctor', 'Receptionist', 'Lab Operator', 'Radiologist', 'Pharmacist']} />}>
+            <Route path="/profile" element={<MyProfilePage />} />
+          </Route>
           <Route element={<RoleRoute roles={['Admin', 'Receptionist', 'Doctor', 'Patient']} />}>
             <Route path="/appointments" element={<AppointmentListPage />} />
           </Route>
@@ -56,6 +62,10 @@ export default function App() {
             <Route path="/patients/register" element={<PatientRegisterPage />} />
             <Route path="/patients/:id" element={<PatientDetailPage />} />
             <Route path="/patients/:id/edit" element={<PatientEditPage />} />
+          </Route>
+          <Route element={<RoleRoute roles={['Admin', 'Receptionist']} />}>
+            <Route path="/doctor-schedules" element={<DoctorScheduleListPage />} />
+            <Route path="/doctor-schedules/:id" element={<DoctorSchedulePage />} />
           </Route>
         </Route>
       </Route>
