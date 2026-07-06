@@ -47,7 +47,13 @@ const roleActions = {
   Patient: { Pending: ["Cancelled"], Confirmed: ["Cancelled"] },
 };
 
-const receptionistCategories = ["All", "Rejected", "Paid", "Diagnosed"];
+const receptionistCategories = [
+  "Pending",
+  "Confirmed",
+  "Rejected",
+  "Paid",
+  "Diagnosed",
+];
 
 function DoctorQueueSections({ appointments, onStatusChange }) {
   const waiting = appointments.filter((appointment) =>
@@ -180,7 +186,7 @@ export default function AppointmentListPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [paymentAppointment, setPaymentAppointment] = useState(null);
   const [roomNumber, setRoomNumber] = useState("");
-  const [receptionistCategory, setReceptionistCategory] = useState("All");
+  const [receptionistCategory, setReceptionistCategory] = useState("Pending");
 
   useEffect(() => {
     async function load() {
@@ -203,7 +209,7 @@ export default function AppointmentListPage() {
   );
 
   const displayedAppointments = useMemo(() => {
-    if (user?.role !== "Receptionist" || receptionistCategory === "All") {
+    if (user?.role !== "Receptionist") {
       return orderedAppointments;
     }
     return orderedAppointments.filter(
@@ -305,12 +311,9 @@ export default function AppointmentListPage() {
       {!loading && !error && user?.role === "Receptionist" && (
         <div className="mb-5 flex flex-wrap gap-2 rounded-lg border bg-white p-3">
           {receptionistCategories.map((category) => {
-            const count =
-              category === "All"
-                ? orderedAppointments.length
-                : orderedAppointments.filter(
-                    (appointment) => appointment.status === category,
-                  ).length;
+            const count = orderedAppointments.filter(
+              (appointment) => appointment.status === category,
+            ).length;
             return (
               <Button
                 key={category}

@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarDays, Search, Stethoscope } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ExternalLink,
+  MapPin,
+  Phone,
+  Search,
+  Stethoscope,
+} from "lucide-react";
 import PublicHeader from "@/components/public/PublicHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -176,6 +184,50 @@ export default function LandingPage() {
           </div>
         )}
       </main>
+      <section className="border-t border-slate-200 bg-slate-900 text-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 md:grid-cols-2">
+          <div className="flex items-start gap-4 rounded-xl border border-slate-700 bg-slate-800 p-5">
+            <span className="rounded-lg bg-blue-600 p-3">
+              <MapPin />
+            </span>
+            <div>
+              <p className="text-sm font-medium text-blue-300">Our Location</p>
+              <h2 className="mt-1 text-lg font-semibold">New Hospital</h2>
+              <address className="mt-1 not-italic text-slate-300">
+                Kurunegala Road, Puttalam
+              </address>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=New%20Hospital%2C%20Kurunegala%20Road%2C%20Puttalam"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-300 hover:text-blue-200"
+              >
+                View on Map <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 rounded-xl border border-slate-700 bg-slate-800 p-5">
+            <span className="rounded-lg bg-orange-500 p-3">
+              <Phone />
+            </span>
+            <div>
+              <p className="text-sm font-medium text-orange-300">
+                Hospital Hotline
+              </p>
+              <a
+                href="tel:0322269434"
+                className="mt-1 block text-2xl font-bold hover:text-orange-200"
+              >
+                032 226 9434
+              </a>
+              <p className="mt-1 text-sm text-slate-400">
+                Call for hospital information and assistance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
