@@ -1,4 +1,5 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -30,10 +31,15 @@ import {
 } from "@/components/ui/card";
 import { patientSchema } from "@/schemas/patient.schema";
 import { registerPatient } from "@/services/patientService";
+import { getAppointmentById } from "@/services/appointmentService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Collects and validates details for a new patient account.
 export default function PatientRegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId");
+  const [prefillError, setPrefillError] = useState("");
 
   const form = useForm({
     resolver: zodResolver(patientSchema),
@@ -49,9 +55,37 @@ export default function PatientRegisterPage() {
     },
   });
 
+  useEffect(() => {
+    if (!appointmentId) return;
+
+    getAppointmentById(appointmentId).then((result) => {
+      if (result.error) {
+        setPrefillError(result.error);
+        return;
+      }
+      const appointment = result.data.appointment;
+      if (appointment.status !== "Diagnosed" || !appointment.guestPatient) {
+        setPrefillError(
+          "This appointment is not an eligible diagnosed guest record.",
+        );
+        return;
+      }
+      form.reset({
+        ...form.getValues(),
+        firstName: appointment.guestPatient.firstName ?? "",
+        lastName: appointment.guestPatient.lastName ?? "",
+        email: appointment.guestPatient.email ?? "",
+        phone: appointment.guestPatient.phone ?? "",
+      });
+    });
+  }, [appointmentId, form]);
+
   // Sends valid form details and returns to the patient list.
   async function onSubmit(values) {
-    const { data, error } = await registerPatient(values);
+    const { data, error } = await registerPatient({
+      ...values,
+      ...(appointmentId ? { appointmentId } : {}),
+    });
     if (error) {
       toast.error(error);
       return;
@@ -77,10 +111,17 @@ export default function PatientRegisterPage() {
         <CardHeader>
           <CardTitle>New Patient Registration</CardTitle>
           <CardDescription>
-            Fill in the patient details below. All fields are required.
+            {appointmentId
+              ? "Available guest details are prefilled. Complete the missing required information."
+              : "Fill in the patient details below. All fields are required."}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {prefillError && (
+            <Alert variant="destructive" className="mb-5">
+              <AlertDescription>{prefillError}</AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">

@@ -151,9 +151,7 @@ export default function StaffListPage({ role, slug }) {
       <ConfirmActionDialog
         open={Boolean(userToDeactivate)}
         onOpenChange={(open) => !open && setUserToDeactivate(null)}
-        title={`Deactivate ${role.toLowerCase()}?`}
-        description={`${userToDeactivate?.firstName ?? ""} ${userToDeactivate?.lastName ?? ""} will no longer be able to sign in.`}
-        confirmLabel={`Deactivate ${role}`}
+        title={`Are you sure you want to deactivate this ${role.toLowerCase()}?`}
         onConfirm={confirmDeactivation}
         loading={actionLoading}
       />

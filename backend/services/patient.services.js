@@ -1,5 +1,8 @@
 import patientDao from "../dao/patient.dao.js";
 import userDao from "../dao/user.dao.js";
+import appointmentDao from "../dao/appointment.dao.js";
+import clinicalDao from "../dao/clinical.dao.js";
+import mongoose from "mongoose";
 
 // Only these common account fields may enter the User document from patient APIs.
 const registrationUserFields = [
@@ -54,6 +57,32 @@ const ensureUniqueUser = async (userData, excludeId) => {
 // Creates a patient account and profile as one workflow.
 const registerPatient = async (patientData) => {
   const userData = pickFields(patientData, registrationUserFields);
+  let diagnosedGuestAppointment = null;
+  let originalGuestPatient = null;
+
+  if (patientData.appointmentId) {
+    if (!mongoose.Types.ObjectId.isValid(patientData.appointmentId)) {
+      throw createError("Invalid appointment ID.", 400);
+    }
+    diagnosedGuestAppointment =
+      await appointmentDao.findAppointmentDocumentById(
+        patientData.appointmentId,
+      );
+    if (!diagnosedGuestAppointment) {
+      throw createError("Appointment not found.", 404);
+    }
+    if (
+      diagnosedGuestAppointment.status !== "Diagnosed" ||
+      !diagnosedGuestAppointment.guestPatient ||
+      diagnosedGuestAppointment.patientId
+    ) {
+      throw createError(
+        "Only a diagnosed guest appointment can be converted to a patient.",
+        409,
+      );
+    }
+    originalGuestPatient = diagnosedGuestAppointment.guestPatient.toObject();
+  }
 
   await ensureUniqueUser(userData);
 
@@ -65,9 +94,33 @@ const registerPatient = async (patientData) => {
 
   try {
     const patient = await patientDao.createPatient({ user: user._id });
+
+    if (diagnosedGuestAppointment) {
+      diagnosedGuestAppointment.patientId = user._id;
+      diagnosedGuestAppointment.guestPatient = null;
+      await diagnosedGuestAppointment.save();
+      await clinicalDao.linkAppointmentRecordsToPatient(
+        diagnosedGuestAppointment._id,
+        user._id,
+      );
+    }
+
     return patientDao.findPatientById(patient._id);
   } catch (error) {
     // Avoid leaving an unused user if patient profile creation fails.
+    if (
+      diagnosedGuestAppointment?.patientId?.toString() === user._id.toString()
+    ) {
+      diagnosedGuestAppointment.patientId = null;
+      diagnosedGuestAppointment.guestPatient = originalGuestPatient;
+      await diagnosedGuestAppointment.save();
+      await clinicalDao.linkAppointmentRecordsToPatient(
+        diagnosedGuestAppointment._id,
+        null,
+      );
+    }
+    const patient = await patientDao.findPatientByUserId(user._id);
+    if (patient) await patientDao.deletePatientById(patient._id);
     await userDao.deleteUserById(user._id);
     throw error;
   }

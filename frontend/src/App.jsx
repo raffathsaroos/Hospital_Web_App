@@ -66,6 +66,8 @@ export default function App() {
               path="/clinical/:appointmentId"
               element={<DoctorClinicalPage />}
             />
+          </Route>
+          <Route element={<RoleRoute roles={["Doctor", "Patient"]} />}>
             <Route path="/reports" element={<DoctorReportsPage />} />
           </Route>
           <Route element={<RoleRoute roles={["Pharmacist"]} />}>

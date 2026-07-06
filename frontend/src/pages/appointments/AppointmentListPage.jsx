@@ -296,6 +296,17 @@ export default function AppointmentListPage() {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    {user?.role === "Admin" &&
+                      appointment.status === "Diagnosed" &&
+                      appointment.guestPatient && (
+                        <Button asChild size="sm">
+                          <Link
+                            to={`/patients/register?appointmentId=${appointment._id}`}
+                          >
+                            Add as Patient
+                          </Link>
+                        </Button>
+                      )}
                     {user?.role === "Doctor" &&
                       ["Paid", "Diagnosed"].includes(appointment.status) && (
                         <Button asChild size="sm">
@@ -335,19 +346,8 @@ export default function AppointmentListPage() {
         onOpenChange={(open) => !open && setPendingAction(null)}
         title={
           pendingAction?.status === "Rejected"
-            ? "Reject appointment?"
+            ? "Are you sure you want to reject this appointment?"
             : "Are you sure you want to cancel?"
-        }
-        description={
-          pendingAction?.status === "Rejected"
-            ? "This appointment will be rejected and removed from the active booking workflow."
-            : undefined
-        }
-        confirmLabel={
-          pendingAction?.status === "Rejected" ? "Reject Appointment" : "Yes"
-        }
-        cancelLabel={
-          pendingAction?.status === "Rejected" ? "Keep unchanged" : "No"
         }
         onConfirm={confirmDestructiveAction}
         loading={actionLoading}

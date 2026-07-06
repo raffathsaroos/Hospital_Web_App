@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { BarChart3, CalendarRange, SunMoon, WalletCards } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  BarChart3,
+  CalendarDays,
+  CalendarRange,
+  FileText,
+  Search,
+  SunMoon,
+  UserRound,
+  WalletCards,
+} from "lucide-react";
 import TopBar from "@/components/layout/TopBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -10,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardAnalytics } from "@/services/dashboardService";
 
@@ -19,11 +30,16 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (user?.role === "Patient") return;
     getDashboardAnalytics().then((result) => {
       if (result.error) setError(result.error);
       else setAnalytics(result.data);
     });
-  }, []);
+  }, [user?.role]);
+
+  if (user?.role === "Patient") {
+    return <PatientDashboard user={user} />;
+  }
 
   return (
     <div>
@@ -95,6 +111,69 @@ export default function DashboardPage() {
           </ChartCard>
         </div>
       )}
+    </div>
+  );
+}
+
+function PatientDashboard({ user }) {
+  const patientActions = [
+    {
+      title: "My Appointments",
+      description: "Review upcoming and previous hospital appointments.",
+      to: "/appointments",
+      icon: CalendarDays,
+    },
+    {
+      title: "My Medical Reports",
+      description: "View diagnoses, prescriptions, lab results, and scans.",
+      to: "/reports",
+      icon: FileText,
+    },
+    {
+      title: "My Profile",
+      description: "Review your personal and account information.",
+      to: "/profile",
+      icon: UserRound,
+    },
+    {
+      title: "Find a Doctor",
+      description: "Browse available doctors and request an appointment.",
+      to: "/",
+      icon: Search,
+    },
+  ];
+
+  return (
+    <div>
+      <TopBar title="Patient Dashboard" />
+      <div className="rounded-2xl bg-gradient-to-r from-blue-700 to-slate-700 p-7 text-white">
+        <p className="text-blue-100">Welcome, {user?.firstName}</p>
+        <h2 className="mt-1 text-3xl font-bold">Your care, in one place</h2>
+        <p className="mt-3 max-w-2xl text-blue-100">
+          Access your appointments, medical reports, profile, and booking
+          options.
+        </p>
+      </div>
+      <div className="mt-6 grid gap-5 sm:grid-cols-2">
+        {patientActions.map(({ title, description, to, icon: Icon }) => (
+          <Card key={title} className="border-slate-200">
+            <CardContent className="flex h-full flex-col items-start p-6">
+              <span className="rounded-xl bg-blue-100 p-3 text-blue-700">
+                <Icon />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                {title}
+              </h3>
+              <p className="mt-1 flex-1 text-sm text-slate-500">
+                {description}
+              </p>
+              <Button asChild className="mt-5">
+                <Link to={to}>Open</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

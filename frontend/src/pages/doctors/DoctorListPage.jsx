@@ -172,11 +172,7 @@ export default function DoctorListPage() {
       <ConfirmActionDialog
         open={Boolean(doctorToDeactivate)}
         onOpenChange={(open) => !open && setDoctorToDeactivate(null)}
-        title="Deactivate doctor?"
-        description={`Dr. ${doctorToDeactivate?.userId.firstName ?? ""} ${
-          doctorToDeactivate?.userId.lastName ?? ""
-        } will no longer be able to sign in or receive new appointments.`}
-        confirmLabel="Deactivate Doctor"
+        title="Are you sure you want to deactivate this doctor?"
         onConfirm={confirmDeactivation}
         loading={actionLoading}
       />

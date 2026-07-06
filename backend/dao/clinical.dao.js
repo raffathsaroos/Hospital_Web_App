@@ -29,6 +29,15 @@ const findPrescriptionById = (id) => Prescription.findById(id);
 const findLabRequestById = (id) => LabRequest.findById(id);
 const findRadiologyRequestById = (id) => RadiologyRequest.findById(id);
 
+// Connects clinical records created for a guest visit to the new patient account.
+const linkAppointmentRecordsToPatient = (appointmentId, patientId) =>
+  Promise.all([
+    Diagnosis.updateMany({ appointmentId }, { patientId }),
+    Prescription.updateMany({ appointmentId }, { patientId }),
+    LabRequest.updateMany({ appointmentId }, { patientId }),
+    RadiologyRequest.updateMany({ appointmentId }, { patientId }),
+  ]);
+
 export default {
   findAppointment,
   saveAppointment,
@@ -43,4 +52,5 @@ export default {
   findPrescriptionById,
   findLabRequestById,
   findRadiologyRequestById,
+  linkAppointmentRecordsToPatient,
 };

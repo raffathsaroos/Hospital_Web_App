@@ -21,20 +21,20 @@ export default function DeletePatientDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Patient</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{patientName}</strong>? This
-            action cannot be undone and will permanently remove the patient
-            record and their account.
+          <DialogTitle>
+            Are you sure you want to delete {patientName}?
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Confirm patient deletion
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)} disabled={loading}>
-            Keep Patient
+            No
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Delete Patient
+            Yes
           </Button>
         </DialogFooter>
       </DialogContent>

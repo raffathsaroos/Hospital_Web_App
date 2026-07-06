@@ -6,5 +6,8 @@ export const createPublicAppointment = (body) =>
 export const getAppointments = (params = {}) =>
   call(() => http.get("/appointments", { params }));
 
+export const getAppointmentById = (id) =>
+  call(() => http.get(`/appointments/${id}`));
+
 export const updateAppointmentStatus = (id, body) =>
   call(() => http.patch(`/appointments/${id}/status`, body));
