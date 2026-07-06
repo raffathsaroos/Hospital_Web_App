@@ -121,6 +121,13 @@ const AppointmentSchema = new mongoose.Schema(
     },
     confirmedAt: { type: Date, default: null },
     paidAt: { type: Date, default: null },
+    paidAmount: { type: Number, min: 0, default: null },
+    roomNumber: { type: String, trim: true, maxlength: 50, default: "" },
+    bookingOrderNumber: {
+      type: Number,
+      min: [1, "Booking order number must be at least 1"],
+      default: null,
+    },
     diagnosedAt: { type: Date, default: null },
     tokenNumber: {
       type: Number,
@@ -149,19 +156,11 @@ const AppointmentSchema = new mongoose.Schema(
 AppointmentSchema.index({ status: 1, appointmentDate: 1 });
 AppointmentSchema.index({ doctorId: 1, appointmentDate: 1 });
 AppointmentSchema.index({ patientId: 1, appointmentDate: -1 });
-AppointmentSchema.index(
-  {
-    doctorId: 1,
-    appointmentDate: 1,
-    timeSlot: 1,
-  },
-  {
-    unique: true,
-    partialFilterExpression: {
-      isSlotReserved: true,
-    },
-  },
-);
+AppointmentSchema.index({
+  doctorId: 1,
+  appointmentDate: 1,
+  timeSlot: 1,
+});
 
 // Every booking must identify one patient source, never two.
 AppointmentSchema.pre("validate", function validatePatientSource() {

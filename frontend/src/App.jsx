@@ -7,6 +7,7 @@ import BookAppointmentPage from "@/pages/public/BookAppointmentPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import AppointmentListPage from "@/pages/appointments/AppointmentListPage";
+import StaffBookAppointmentPage from "@/pages/appointments/StaffBookAppointmentPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import UserCreatePage from "@/pages/users/UserCreatePage";
 import DoctorListPage from "@/pages/doctors/DoctorListPage";
@@ -60,6 +61,12 @@ export default function App() {
             }
           >
             <Route path="/appointments" element={<AppointmentListPage />} />
+          </Route>
+          <Route element={<RoleRoute roles={["Admin", "Receptionist"]} />}>
+            <Route
+              path="/appointments/book"
+              element={<StaffBookAppointmentPage />}
+            />
           </Route>
           <Route element={<RoleRoute roles={["Doctor"]} />}>
             <Route

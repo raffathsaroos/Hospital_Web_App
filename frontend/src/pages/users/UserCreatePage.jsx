@@ -62,7 +62,6 @@ const initialForm = {
   consultationFee: "",
 };
 
-// Reuses one account form while locking specialized routes to their assigned role.
 export default function UserCreatePage({ fixedRole }) {
   const [form, setForm] = useState(() => ({
     ...initialForm,
@@ -86,7 +85,6 @@ export default function UserCreatePage({ fixedRole }) {
       gender: form.gender,
       password: form.password,
     };
-    // Profile-backed roles use their own API so both records are created together.
     let result;
     if (form.role === "Patient") result = await createPatient(common);
     else if (form.role === "Doctor")
@@ -107,7 +105,6 @@ export default function UserCreatePage({ fixedRole }) {
     if (result.error) return toast.error(result.error);
     toast.success(`${form.role} account created successfully`);
     setForm({ ...initialForm, role: fixedRole ?? initialForm.role });
-    // Return each role to the management route that actually exists for it.
     if (fixedRole === "Doctor") {
       navigate("/doctors");
     } else if (fixedRole) {

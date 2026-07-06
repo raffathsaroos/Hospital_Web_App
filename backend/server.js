@@ -8,6 +8,7 @@ import appointmentRoutes from "./routes/appointment.route.js";
 import doctorRoutes from "./routes/doctor.route.js";
 import clinicalRoutes from "./routes/clinical.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
+import Appointment from "./models/appointment.model.js";
 
 const app = express();
 
@@ -19,7 +20,11 @@ const LOCAL_MONGO_URI = "mongodb://127.0.0.1:27017/hospital_db";
 
 mongoose
   .connect(LOCAL_MONGO_URI)
-  .then(() => console.log("Connected to local MongoDB"))
+  .then(async () => {
+    // Removes obsolete indexes and applies the current 10-patient slot indexes.
+    await Appointment.syncIndexes();
+    console.log("Connected to local MongoDB");
+  })
   .catch((error) => console.error("DB Connection Error:", error));
 
 // API routes pass requests through controllers, services, and DAOs.

@@ -3,6 +3,9 @@ import { call, http } from "./api";
 export const createPublicAppointment = (body) =>
   call(() => http.post("/appointments/public", body));
 
+export const createStaffAppointment = (body) =>
+  call(() => http.post("/appointments", body));
+
 export const getAppointments = (params = {}) =>
   call(() => http.get("/appointments", { params }));
 

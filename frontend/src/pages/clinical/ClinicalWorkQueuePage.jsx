@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import TopBar from "@/components/layout/TopBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,6 +23,7 @@ import {
   getPrescriptions,
   getRadiologyRequests,
 } from "@/services/clinicalService";
+import { downloadHospitalBill } from "@/lib/downloadBill";
 
 const settings = {
   pharmacy: { title: "Prescription Queue", load: getPrescriptions },
@@ -40,8 +41,7 @@ export default function ClinicalWorkQueuePage({ type }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const params = type === "pharmacy" ? {} : { status: "Pending" };
-    config.load(params).then((result) => {
+    config.load({}).then((result) => {
       if (result.error) setError(result.error);
       else {
         const loadedRecords =
@@ -52,11 +52,10 @@ export default function ClinicalWorkQueuePage({ type }) {
         setRecords(
           loadedRecords.filter((record) => record.status === "Pending"),
         );
-        if (type === "pharmacy") {
-          setCompletedRecords(
-            loadedRecords.filter((record) => record.status === "Dispensed"),
-          );
-        }
+        const completedStatus = type === "pharmacy" ? "Dispensed" : "Completed";
+        setCompletedRecords(
+          loadedRecords.filter((record) => record.status === completedStatus),
+        );
       }
       setLoading(false);
     });
@@ -103,6 +102,19 @@ export default function ClinicalWorkQueuePage({ type }) {
         {
           ...record,
           ...dispensed,
+          patientId: record.patientId,
+          doctorId: record.doctorId,
+          appointmentId: record.appointmentId,
+        },
+        ...current,
+      ]);
+    } else {
+      const completed =
+        type === "lab" ? result.data.labRequest : result.data.radiologyRequest;
+      setCompletedRecords((current) => [
+        {
+          ...record,
+          ...completed,
           patientId: record.patientId,
           doctorId: record.doctorId,
           appointmentId: record.appointmentId,
@@ -331,6 +343,9 @@ export default function ClinicalWorkQueuePage({ type }) {
       {type === "pharmacy" && (
         <DispensedPrescriptionHistory records={completedRecords} />
       )}
+      {type !== "pharmacy" && (
+        <CompletedRequestHistory type={type} records={completedRecords} />
+      )}
     </div>
   );
 }
@@ -431,6 +446,13 @@ function DispensedPrescriptionHistory({ records }) {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => downloadPrescriptionBill(record)}
+                      >
+                        <Download /> Bill
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => toggleRecord(record._id)}
                       >
                         {expanded ? <ChevronUp /> : <ChevronDown />}
@@ -478,4 +500,145 @@ function DispensedPrescriptionHistory({ records }) {
       )}
     </section>
   );
+}
+
+function CompletedRequestHistory({ type, records }) {
+  const [expandedRecords, setExpandedRecords] = useState(() => new Set());
+  const label = type === "lab" ? "Completed Lab Tests" : "Completed Scans";
+
+  function toggleRecord(recordId) {
+    setExpandedRecords((current) => {
+      const next = new Set(current);
+      if (next.has(recordId)) next.delete(recordId);
+      else next.add(recordId);
+      return next;
+    });
+  }
+
+  return (
+    <section className="mt-10 space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900">{label}</h2>
+        <p className="text-sm text-slate-500">
+          Completed records and their downloadable bills.
+        </p>
+      </div>
+      {records.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-slate-500">
+            No completed records yet.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {records.map((record) => {
+            const patient = patientForRecord(record);
+            const expanded = expandedRecords.has(record._id);
+            return (
+              <Card key={record._id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle>{patient}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadRequestBill(type, record)}
+                      >
+                        <Download /> Bill
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleRecord(record._id)}
+                      >
+                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                        {expanded ? "Collapse" : "Expand"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                {expanded && (
+                  <CardContent className="space-y-3">
+                    <Info
+                      label={type === "lab" ? "Test" : "Scan"}
+                      value={type === "lab" ? record.testName : record.scanType}
+                    />
+                    <Info
+                      label={type === "lab" ? "Result" : "Report"}
+                      value={type === "lab" ? record.result : record.report}
+                    />
+                    <div className="flex items-center justify-between rounded-md bg-blue-50 p-3">
+                      <span className="font-medium text-blue-700">Total</span>
+                      <span className="text-lg font-bold text-blue-800">
+                        LKR {Number(record.price ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function downloadPrescriptionBill(record) {
+  downloadHospitalBill({
+    title: "Pharmacy Bill",
+    billNumber: record._id,
+    patientName: patientForRecord(record),
+    meta: [
+      { label: "Doctor", value: doctorForRecord(record) },
+      {
+        label: "Dispensed at",
+        value: record.dispensedAt
+          ? new Date(record.dispensedAt).toLocaleString()
+          : "Completed",
+      },
+    ],
+    lineItems: (record.medicines ?? []).map((medicine) => ({
+      description: `${medicine.medicineName} · ${medicine.dosageQuantity} × ${medicine.frequencyPerDay} × ${medicine.numberOfDays}`,
+      amount: medicine.total,
+    })),
+    total: record.grandTotal,
+  });
+}
+
+function downloadRequestBill(type, record) {
+  const isLab = type === "lab";
+  downloadHospitalBill({
+    title: isLab ? "Lab Test Bill" : "Radiology Bill",
+    billNumber: record._id,
+    patientName: patientForRecord(record),
+    meta: [
+      { label: "Doctor", value: doctorForRecord(record) },
+      {
+        label: "Completed at",
+        value: record.completedAt
+          ? new Date(record.completedAt).toLocaleString()
+          : "Completed",
+      },
+    ],
+    lineItems: [
+      {
+        description: isLab ? record.testName : record.scanType,
+        amount: record.price,
+      },
+    ],
+    total: record.price,
+  });
+}
+
+function patientForRecord(record) {
+  const patient = record.patientId ?? record.appointmentId?.guestPatient;
+  return patient ? `${patient.firstName} ${patient.lastName}` : "Guest patient";
+}
+
+function doctorForRecord(record) {
+  return `Dr. ${record.doctorId?.firstName ?? ""} ${
+    record.doctorId?.lastName ?? ""
+  }`;
 }

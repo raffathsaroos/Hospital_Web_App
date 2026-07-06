@@ -4,7 +4,6 @@ import {
   CalendarDays,
   FileText,
   FlaskConical,
-  Hospital,
   LayoutDashboard,
   LogOut,
   Pill,
@@ -104,7 +103,11 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col bg-slate-900 text-slate-300 md:flex">
       <div className="flex items-center gap-2 border-b border-slate-700 px-4 py-5">
-        <Hospital className="h-6 w-6 text-blue-400" />
+        <img
+          src="/new-hospital-logo.png"
+          alt="New Hospital logo"
+          className="h-8 w-8 object-contain"
+        />
         <span className="text-lg font-semibold text-white">New Hospital</span>
       </div>
 

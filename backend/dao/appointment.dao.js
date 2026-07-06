@@ -1,6 +1,7 @@
 import Appointment from "../models/appointment.model.js";
 import Doctor from "../models/doctor.model.js";
 import User from "../models/user.model.js";
+import BookingCounter from "../models/bookingCounter.model.js";
 
 const patientFields = "firstName lastName email phone nic";
 const doctorFields = "firstName lastName email phone";
@@ -12,6 +13,34 @@ const populatePeople = (query) =>
 // Inserts one appointment record.
 const createAppointment = (appointmentData) =>
   Appointment.create(appointmentData);
+
+// Generates a daily sequence in the same order booking requests are stored.
+const getNextBookingOrder = async ({ doctorId, appointmentDate, timeSlot }) => {
+  const day = new Date(appointmentDate).toISOString().slice(0, 10);
+  const slotKey = `${doctorId}:${day}:${timeSlot}`;
+  const counterId = `booking:${slotKey}`;
+  const existingCounter = await BookingCounter.findById(counterId);
+
+  if (!existingCounter) {
+    const existingBookings = await Appointment.countDocuments({
+      doctorId,
+      appointmentDate,
+      timeSlot,
+    });
+    await BookingCounter.updateOne(
+      { _id: counterId },
+      { $setOnInsert: { sequence: existingBookings } },
+      { upsert: true },
+    );
+  }
+
+  const counter = await BookingCounter.findByIdAndUpdate(
+    counterId,
+    { $inc: { sequence: 1 } },
+    { new: true, upsert: true, setDefaultsOnInsert: true },
+  );
+  return counter.sequence;
+};
 
 // Returns a sorted appointment page and its full count.
 const findAppointments = async (filter, page, limit) => {
@@ -40,7 +69,7 @@ const findAppointmentById = (id) => populatePeople(Appointment.findById(id));
 const findAppointmentDocumentById = (id) => Appointment.findById(id);
 
 // Looks for another active booking in the same slot.
-const findSlotConflict = ({
+const countActiveSlotBookings = ({
   doctorId,
   appointmentDate,
   timeSlot,
@@ -61,7 +90,7 @@ const findSlotConflict = ({
     };
   }
 
-  return Appointment.findOne(filter);
+  return Appointment.countDocuments(filter);
 };
 
 // Loads the doctor schedule linked to a user account.
@@ -93,10 +122,11 @@ const findDoctorQueue = (doctorId, date) => {
 
 export default {
   createAppointment,
+  getNextBookingOrder,
   findAppointments,
   findAppointmentById,
   findAppointmentDocumentById,
-  findSlotConflict,
+  countActiveSlotBookings,
   findDoctorProfile,
   findActivePatient,
   findDoctorQueue,

@@ -184,15 +184,18 @@ const prepareBooking = async (data) => {
   const doctor = await appointmentDao.findDoctorProfile(data.doctorId);
   ensureAvailableSlot(doctor, appointmentDate, timeSlot);
 
-  const conflict = await appointmentDao.findSlotConflict({
+  const slotBookingCount = await appointmentDao.countActiveSlotBookings({
     doctorId: data.doctorId,
     appointmentDate,
     timeSlot,
     excludeId: data.excludeId,
   });
 
-  if (conflict) {
-    throw createError("Selected time slot is already booked.", 409);
+  if (slotBookingCount >= 10) {
+    throw createError(
+      "Selected time slot has reached its 10-patient limit.",
+      409,
+    );
   }
 
   return {
@@ -212,6 +215,7 @@ const buildBookingData = (data, prepared) => ({
   timeSlot: prepared.timeSlot,
   appointmentType: data.appointmentType,
   notes: data.notes || "",
+  bookingOrderNumber: data.bookingOrderNumber,
 });
 
 // Creates an appointment for a patient without an account.
@@ -222,8 +226,13 @@ const createPublicAppointment = async (data) => {
 
   ensureGuestPatient(data.guestPatient);
   const prepared = await prepareBooking(data);
+  const bookingOrderNumber = await appointmentDao.getNextBookingOrder({
+    doctorId: data.doctorId,
+    appointmentDate: prepared.appointmentDate,
+    timeSlot: prepared.timeSlot,
+  });
   const appointment = await appointmentDao.createAppointment(
-    buildBookingData(data, prepared),
+    buildBookingData({ ...data, bookingOrderNumber }, prepared),
   );
 
   return appointmentDao.findAppointmentById(appointment._id);
@@ -250,8 +259,13 @@ const createStaffAppointment = async (data) => {
   }
 
   const prepared = await prepareBooking(data);
+  const bookingOrderNumber = await appointmentDao.getNextBookingOrder({
+    doctorId: data.doctorId,
+    appointmentDate: prepared.appointmentDate,
+    timeSlot: prepared.timeSlot,
+  });
   const appointment = await appointmentDao.createAppointment(
-    buildBookingData(data, prepared),
+    buildBookingData({ ...data, bookingOrderNumber }, prepared),
   );
 
   return appointmentDao.findAppointmentById(appointment._id);
@@ -463,7 +477,15 @@ const updateAppointmentStatus = async (id, data, actor) => {
     nextStatus === "Rejected" ? data.rejectionReason : "";
 
   if (nextStatus === "Confirmed") appointment.confirmedAt = new Date();
-  if (nextStatus === "Paid") appointment.paidAt = new Date();
+  if (nextStatus === "Paid") {
+    if (!data.roomNumber?.trim()) {
+      throw createError("Room number is required before payment.", 400);
+    }
+    const doctor = await appointmentDao.findDoctorProfile(appointment.doctorId);
+    appointment.roomNumber = data.roomNumber.trim();
+    appointment.paidAmount = Number(doctor?.consultationFee ?? 0);
+    appointment.paidAt = new Date();
+  }
   if (nextStatus === "Diagnosed") {
     appointment.hasVisited = true;
     appointment.diagnosedAt = new Date();

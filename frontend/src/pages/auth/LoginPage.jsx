@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Hospital, LockKeyhole } from "lucide-react";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,12 @@ export default function LoginPage() {
     <div className="grid min-h-screen bg-slate-100 lg:grid-cols-2">
       <div className="hidden bg-gradient-to-br from-blue-700 to-slate-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <Link to="/" className="flex items-center gap-3 font-bold">
-          <Hospital className="text-orange-300" /> New Hospital
+          <img
+            src="/new-hospital-logo.png"
+            alt="New Hospital logo"
+            className="h-10 w-10 object-contain"
+          />
+          <span>New Hospital</span>
         </Link>
         <div>
           <LockKeyhole className="h-12 w-12 text-orange-300" />

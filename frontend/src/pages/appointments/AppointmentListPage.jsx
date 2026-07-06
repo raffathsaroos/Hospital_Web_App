@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Clock3, XCircle } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Download,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import TopBar from "@/components/layout/TopBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,7 +15,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { downloadHospitalBill } from "@/lib/downloadBill";
 import {
   getAppointments,
   updateAppointmentStatus,
@@ -159,6 +176,8 @@ export default function AppointmentListPage() {
   const [pendingAction, setPendingAction] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [paymentAppointment, setPaymentAppointment] = useState(null);
+  const [roomNumber, setRoomNumber] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -180,21 +199,36 @@ export default function AppointmentListPage() {
     [appointments],
   );
 
-  async function performStatusChange(appointment, status, reason = "") {
+  async function performStatusChange(
+    appointment,
+    status,
+    reason = "",
+    extra = {},
+  ) {
     const result = await updateAppointmentStatus(appointment._id, {
       status,
       ...(reason ? { rejectionReason: reason } : {}),
+      ...extra,
     });
-    if (result.error) return toast.error(result.error);
+    if (result.error) {
+      toast.error(result.error);
+      return false;
+    }
     setAppointments((current) =>
       current.map((item) =>
         item._id === appointment._id ? result.data.appointment : item,
       ),
     );
     toast.success(`Appointment marked as ${status.toLowerCase()}`);
+    return true;
   }
 
   function changeStatus(appointment, status) {
+    if (status === "Paid") {
+      setRoomNumber("");
+      setPaymentAppointment(appointment);
+      return;
+    }
     // Destructive transitions pause for the shared confirmation dialog.
     if (status === "Cancelled" || status === "Rejected") {
       setRejectionReason("");
@@ -215,11 +249,24 @@ export default function AppointmentListPage() {
     setPendingAction(null);
   }
 
+  async function confirmPayment() {
+    setActionLoading(true);
+    const saved = await performStatusChange(paymentAppointment, "Paid", "", {
+      roomNumber: roomNumber.trim(),
+    });
+    setActionLoading(false);
+    if (saved) setPaymentAppointment(null);
+  }
+
   return (
     <div>
-      <TopBar
-        title={user?.role === "Doctor" ? "Doctor Queue" : "Appointments"}
-      />
+      <TopBar title={user?.role === "Doctor" ? "Doctor Queue" : "Appointments"}>
+        {["Admin", "Receptionist"].includes(user?.role) && (
+          <Button asChild>
+            <Link to="/appointments/book">Book Appointment</Link>
+          </Button>
+        )}
+      </TopBar>
       {loading && (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -296,6 +343,16 @@ export default function AppointmentListPage() {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    {["Admin", "Receptionist"].includes(user?.role) &&
+                      ["Paid", "Diagnosed"].includes(appointment.status) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadAppointmentBill(appointment)}
+                        >
+                          <Download /> Download Bill
+                        </Button>
+                      )}
                     {user?.role === "Doctor" &&
                       ["Paid", "Diagnosed"].includes(appointment.status) && (
                         <Button asChild size="sm">
@@ -359,6 +416,75 @@ export default function AppointmentListPage() {
         reason={rejectionReason}
         onReasonChange={setRejectionReason}
       />
+      <Dialog
+        open={Boolean(paymentAppointment)}
+        onOpenChange={(open) => !open && setPaymentAppointment(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Payment Details</DialogTitle>
+            <DialogDescription>
+              Enter the assigned room before marking this appointment as paid.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Room number</Label>
+            <Input
+              value={roomNumber}
+              onChange={(event) => setRoomNumber(event.target.value)}
+              placeholder="For example: OPD-03"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPaymentAppointment(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmPayment}
+              disabled={actionLoading || !roomNumber.trim()}
+            >
+              {actionLoading ? "Saving..." : "Mark Paid"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+function downloadAppointmentBill(appointment) {
+  const patient = appointment.patientId ?? appointment.guestPatient;
+  const doctor = appointment.doctorId;
+  downloadHospitalBill({
+    title: "Appointment Bill",
+    billNumber: appointment._id,
+    patientName: patient
+      ? `${patient.firstName} ${patient.lastName}`
+      : "Guest patient",
+    meta: [
+      {
+        label: "Doctor",
+        value: `Dr. ${doctor?.firstName ?? ""} ${doctor?.lastName ?? ""}`,
+      },
+      { label: "Room number", value: appointment.roomNumber || "Not assigned" },
+      {
+        label: "Booking order",
+        value: appointment.bookingOrderNumber ?? "Not available",
+      },
+      {
+        label: "Appointment",
+        value: `${new Date(appointment.appointmentDate).toLocaleDateString()} · ${appointment.timeSlot}`,
+      },
+    ],
+    lineItems: [
+      {
+        description: "Doctor consultation",
+        amount: appointment.paidAmount ?? 0,
+      },
+    ],
+    total: appointment.paidAmount ?? 0,
+  });
 }
