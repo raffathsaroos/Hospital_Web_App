@@ -1,52 +1,65 @@
-import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { ArrowLeft } from 'lucide-react'
-import TopBar from '@/components/layout/TopBar'
+import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+import TopBar from "@/components/layout/TopBar";
 import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card'
-import { patientSchema } from '@/schemas/patient.schema'
-import { registerPatient } from '@/services/patientService'
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { patientSchema } from "@/schemas/patient.schema";
+import { registerPatient } from "@/services/patientService";
 
 // Collects and validates details for a new patient account.
 export default function PatientRegisterPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const form = useForm({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      nic: '',
-      dob: '',
-      gender: '',
-      password: '',
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      nic: "",
+      dob: "",
+      gender: "",
+      password: "",
     },
-  })
+  });
 
   // Sends valid form details and returns to the patient list.
   async function onSubmit(values) {
-    const { data, error } = await registerPatient(values)
+    const { data, error } = await registerPatient(values);
     if (error) {
-      toast.error(error)
-      return
+      toast.error(error);
+      return;
     }
     toast.success(
-      `${data.patient.user.firstName} ${data.patient.user.lastName} registered successfully`
-    )
-    navigate('/patients')
+      `${data.patient.user.firstName} ${data.patient.user.lastName} registered successfully`,
+    );
+    navigate("/patients");
   }
 
   return (
@@ -104,7 +117,11 @@ export default function PatientRegisterPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="john@example.com" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="john@example.com"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -145,7 +162,7 @@ export default function PatientRegisterPage() {
                       <FormControl>
                         <Input
                           type="date"
-                          max={new Date().toISOString().split('T')[0]}
+                          max={new Date().toISOString().split("T")[0]}
                           {...field}
                         />
                       </FormControl>
@@ -161,7 +178,10 @@ export default function PatientRegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select gender" />
@@ -185,7 +205,11 @@ export default function PatientRegisterPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Min. 8 characters" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="Min. 8 characters"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -197,12 +221,14 @@ export default function PatientRegisterPage() {
                 className="w-full"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? 'Registering...' : 'Register Patient'}
+                {form.formState.isSubmitting
+                  ? "Registering..."
+                  : "Register Patient"}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

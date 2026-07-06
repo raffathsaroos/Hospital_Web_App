@@ -1,3 +1,4 @@
-import { call, http } from './api'
+import { call, http } from "./api";
 
-export const login = (credentials) => call(() => http.post('/login', credentials))
+export const login = (credentials) =>
+  call(() => http.post("/login", credentials));

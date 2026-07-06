@@ -1,29 +1,29 @@
-import doctorDao from '../dao/doctor.dao.js';
-import userDao from '../dao/user.dao.js';
-import { WEEK_DAYS } from '../constants/weekdays.const.js';
+import doctorDao from "../dao/doctor.dao.js";
+import userDao from "../dao/user.dao.js";
+import { WEEK_DAYS } from "../constants/weekdays.const.js";
 
 const registrationUserFields = [
-  'firstName',
-  'lastName',
-  'email',
-  'phone',
-  'nic',
-  'dob',
-  'gender',
-  'password',
-  'avatar',
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "nic",
+  "dob",
+  "gender",
+  "password",
+  "avatar",
 ];
 
 const doctorProfileFields = [
-  'department',
-  'specialization',
-  'licenseNumber',
-  'qualifications',
-  'experience',
-  'consultationFee',
-  'availableDays',
-  'availableTimeSlots',
-  'isAvailable',
+  "department",
+  "specialization",
+  "licenseNumber",
+  "qualifications",
+  "experience",
+  "consultationFee",
+  "availableDays",
+  "availableTimeSlots",
+  "isAvailable",
 ];
 
 // Builds an error with a response status for the controller.
@@ -36,14 +36,14 @@ const createError = (message, statusCode) => {
 // Copies only fields accepted by the doctor workflow.
 const pickFields = (data, allowedFields) =>
   Object.fromEntries(
-    Object.entries(data).filter(([key]) => allowedFields.includes(key))
+    Object.entries(data).filter(([key]) => allowedFields.includes(key)),
   );
 
 // Prevents a doctor from sharing another user's identity details.
 const ensureUniqueUser = async (userData, excludeId) => {
   const existingUser = await userDao.findUserByUniqueFields(
     userData,
-    excludeId
+    excludeId,
   );
 
   if (!existingUser) return;
@@ -52,14 +52,14 @@ const ensureUniqueUser = async (userData, excludeId) => {
     userData.email &&
     existingUser.email === userData.email.toLowerCase().trim()
   ) {
-    throw createError('A user with this email already exists.', 409);
+    throw createError("A user with this email already exists.", 409);
   }
 
   if (userData.phone && existingUser.phone === userData.phone.trim()) {
-    throw createError('A user with this phone number already exists.', 409);
+    throw createError("A user with this phone number already exists.", 409);
   }
 
-  throw createError('A user with this NIC already exists.', 409);
+  throw createError("A user with this NIC already exists.", 409);
 };
 
 // Prevents two doctors from sharing one license number.
@@ -68,14 +68,11 @@ const ensureUniqueLicense = async (licenseNumber, excludeId) => {
 
   const existingDoctor = await doctorDao.findDoctorByLicense(
     licenseNumber,
-    excludeId
+    excludeId,
   );
 
   if (existingDoctor) {
-    throw createError(
-      'A doctor with this license number already exists.',
-      409
-    );
+    throw createError("A doctor with this license number already exists.", 409);
   }
 };
 
@@ -88,7 +85,7 @@ const addDoctor = async (doctorData) => {
 
   const user = await userDao.createUser({
     ...userData,
-    role: 'Doctor',
+    role: "Doctor",
   });
 
   try {
@@ -115,7 +112,7 @@ const getDoctor = async (id) => {
   const doctor = await doctorDao.findActiveDoctorById(id);
 
   if (!doctor || !doctor.userId) {
-    throw createError('Doctor not found.', 404);
+    throw createError("Doctor not found.", 404);
   }
 
   return doctor;
@@ -123,7 +120,7 @@ const getDoctor = async (id) => {
 
 const getDoctorForAdmin = async (id) => {
   const doctor = await doctorDao.findDoctorById(id);
-  if (!doctor || !doctor.userId) throw createError('Doctor not found.', 404);
+  if (!doctor || !doctor.userId) throw createError("Doctor not found.", 404);
   return doctor;
 };
 
@@ -132,11 +129,11 @@ const updateDoctor = async (id, doctorData) => {
   const doctor = await doctorDao.findDoctorById(id);
 
   if (!doctor) {
-    throw createError('Doctor not found.', 404);
+    throw createError("Doctor not found.", 404);
   }
 
   if (!doctor.userId) {
-    throw createError('Doctor user account not found.', 404);
+    throw createError("Doctor user account not found.", 404);
   }
 
   const userData = pickFields(doctorData, registrationUserFields);
@@ -161,15 +158,15 @@ const updateDoctorSchedule = async (id, scheduleData) => {
   const doctor = await doctorDao.findDoctorById(id);
 
   if (!doctor || !doctor.userId) {
-    throw createError('Doctor not found.', 404);
+    throw createError("Doctor not found.", 404);
   }
 
   if (!Array.isArray(scheduleData.availableTimeSlots)) {
-    throw createError('Available time slots must be an array.', 400);
+    throw createError("Available time slots must be an array.", 400);
   }
 
-  if (typeof scheduleData.isAvailable !== 'boolean') {
-    throw createError('isAvailable must be true or false.', 400);
+  if (typeof scheduleData.isAvailable !== "boolean") {
+    throw createError("isAvailable must be true or false.", 400);
   }
 
   const availableTimeSlots = scheduleData.availableTimeSlots.map((slot) => ({
@@ -181,15 +178,18 @@ const updateDoctorSchedule = async (id, scheduleData) => {
 
   for (const slot of availableTimeSlots) {
     if (!WEEK_DAYS.includes(slot.day)) {
-      throw createError('Each time slot must use a valid weekday.', 400);
+      throw createError("Each time slot must use a valid weekday.", 400);
     }
 
     if (!slot.startTime || !slot.endTime || slot.endTime <= slot.startTime) {
-      throw createError('Each time slot must end after it starts.', 400);
+      throw createError("Each time slot must end after it starts.", 400);
     }
 
     if (!Number.isInteger(slot.slotDurationMinutes)) {
-      throw createError('Slot duration must be a whole number of minutes.', 400);
+      throw createError(
+        "Slot duration must be a whole number of minutes.",
+        400,
+      );
     }
   }
 
@@ -206,11 +206,14 @@ const updateDoctorSchedule = async (id, scheduleData) => {
   }
 
   const availableDays = WEEK_DAYS.filter((day) =>
-    availableTimeSlots.some((slot) => slot.day === day)
+    availableTimeSlots.some((slot) => slot.day === day),
   );
 
   if (scheduleData.isAvailable && availableTimeSlots.length === 0) {
-    throw createError('Add at least one time slot before making the doctor available.', 400);
+    throw createError(
+      "Add at least one time slot before making the doctor available.",
+      400,
+    );
   }
 
   await doctorDao.updateDoctorById(doctor._id, {
@@ -224,18 +227,18 @@ const updateDoctorSchedule = async (id, scheduleData) => {
 
 // Enables or disables the account linked to one doctor.
 const setDoctorActiveStatus = async (id, isActive) => {
-  if (typeof isActive !== 'boolean') {
-    throw createError('isActive must be true or false.', 400);
+  if (typeof isActive !== "boolean") {
+    throw createError("isActive must be true or false.", 400);
   }
 
   const doctor = await doctorDao.findDoctorById(id);
 
   if (!doctor) {
-    throw createError('Doctor not found.', 404);
+    throw createError("Doctor not found.", 404);
   }
 
   if (!doctor.userId) {
-    throw createError('Doctor user account not found.', 404);
+    throw createError("Doctor user account not found.", 404);
   }
 
   await userDao.updateUserById(doctor.userId._id, { isActive });
@@ -247,11 +250,11 @@ const deactivateDoctor = async (id) => {
   const doctor = await doctorDao.findDoctorById(id);
 
   if (!doctor) {
-    throw createError('Doctor not found.', 404);
+    throw createError("Doctor not found.", 404);
   }
 
   if (!doctor.userId) {
-    throw createError('Doctor user account not found.', 404);
+    throw createError("Doctor user account not found.", 404);
   }
 
   await userDao.updateUserById(doctor.userId._id, { isActive: false });

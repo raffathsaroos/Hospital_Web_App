@@ -1,15 +1,13 @@
-import Appointment from '../models/appointment.model.js';
-import Doctor from '../models/doctor.model.js';
-import User from '../models/user.model.js';
+import Appointment from "../models/appointment.model.js";
+import Doctor from "../models/doctor.model.js";
+import User from "../models/user.model.js";
 
-const patientFields = 'firstName lastName email phone nic';
-const doctorFields = 'firstName lastName email phone';
+const patientFields = "firstName lastName email phone nic";
+const doctorFields = "firstName lastName email phone";
 
 // Adds safe patient and doctor details to an appointment query.
 const populatePeople = (query) =>
-  query
-    .populate('patientId', patientFields)
-    .populate('doctorId', doctorFields);
+  query.populate("patientId", patientFields).populate("doctorId", doctorFields);
 
 // Inserts one appointment record.
 const createAppointment = (appointmentData) =>
@@ -24,7 +22,7 @@ const findAppointments = async (filter, page, limit) => {
       Appointment.find(filter)
         .sort({ appointmentDate: 1, timeSlot: 1 })
         .skip(skip)
-        .limit(limit)
+        .limit(limit),
     ),
     Appointment.countDocuments(filter),
   ]);
@@ -36,12 +34,10 @@ const findAppointments = async (filter, page, limit) => {
 };
 
 // Finds one appointment with its patient and doctor details.
-const findAppointmentById = (id) =>
-  populatePeople(Appointment.findById(id));
+const findAppointmentById = (id) => populatePeople(Appointment.findById(id));
 
 // Finds the raw document needed for updates.
-const findAppointmentDocumentById = (id) =>
-  Appointment.findById(id);
+const findAppointmentDocumentById = (id) => Appointment.findById(id);
 
 // Looks for another active booking in the same slot.
 const findSlotConflict = ({
@@ -55,7 +51,7 @@ const findSlotConflict = ({
     appointmentDate,
     timeSlot,
     status: {
-      $in: ['Pending', 'Confirmed', 'Paid', 'InQueue'],
+      $in: ["Pending", "Confirmed", "Paid"],
     },
   };
 
@@ -71,22 +67,28 @@ const findSlotConflict = ({
 // Loads the doctor schedule linked to a user account.
 const findDoctorProfile = (userId) =>
   Doctor.findOne({ userId }).populate(
-    'userId',
-    'firstName lastName role isActive'
+    "userId",
+    "firstName lastName role isActive",
   );
 
 // Confirms that a patient account exists and is active.
 const findActivePatient = (id) =>
   User.findOne({
     _id: id,
-    role: 'Patient',
+    role: "Patient",
     isActive: true,
   });
 
 const findDoctorQueue = (doctorId, date) => {
-  const filter = { doctorId, status: 'InQueue' };
+  const filter = { doctorId, status: "Paid" };
   if (date) filter.appointmentDate = date;
-  return populatePeople(Appointment.find(filter).sort({ appointmentDate: 1, timeSlot: 1, createdAt: 1 }));
+  return populatePeople(
+    Appointment.find(filter).sort({
+      appointmentDate: 1,
+      timeSlot: 1,
+      createdAt: 1,
+    }),
+  );
 };
 
 export default {

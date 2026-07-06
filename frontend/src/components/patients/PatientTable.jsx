@@ -1,10 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Edit, ToggleLeft, ToggleRight } from 'lucide-react'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit, ToggleLeft, ToggleRight } from "lucide-react";
 
 // Shows patient details with status, edit, and delete actions.
 export default function PatientTable({ patients, onToggleStatus }) {
@@ -25,11 +30,11 @@ export default function PatientTable({ patients, onToggleStatus }) {
         </TableHeader>
         <TableBody>
           {patients.map((patient) => {
-            const hasLinkedUser = Boolean(patient.user)
-            const user = patient.user ?? patient
+            const hasLinkedUser = Boolean(patient.user);
+            const user = patient.user ?? patient;
             const isActive = hasLinkedUser
               ? user.isActive
-              : user.status === 'active' || user.status === 'actives'
+              : user.status === "active" || user.status === "actives";
             return (
               <TableRow key={patient._id}>
                 <TableCell className="font-medium">
@@ -41,26 +46,28 @@ export default function PatientTable({ patients, onToggleStatus }) {
                       {user.firstName} {user.lastName}
                     </Link>
                   ) : (
-                    <span>{user.firstName} {user.lastName}</span>
+                    <span>
+                      {user.firstName} {user.lastName}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
-                <TableCell>{user.nic ?? user.nationalId ?? '—'}</TableCell>
+                <TableCell>{user.nic ?? user.nationalId ?? "—"}</TableCell>
                 <TableCell>
-                  {user.dob ? new Date(user.dob).toLocaleDateString() : '—'}
+                  {user.dob ? new Date(user.dob).toLocaleDateString() : "—"}
                 </TableCell>
-                <TableCell>{user.gender ?? '—'}</TableCell>
+                <TableCell>{user.gender ?? "—"}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
                     className={
                       isActive
-                        ? 'border-blue-300 bg-blue-50 text-blue-700'
-                        : 'border-orange-300 bg-orange-50 text-orange-700'
+                        ? "border-blue-300 bg-blue-50 text-blue-700"
+                        : "border-orange-300 bg-orange-50 text-orange-700"
                     }
                   >
-                    {isActive ? 'Active' : 'Inactive'}
+                    {isActive ? "Active" : "Inactive"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -68,7 +75,13 @@ export default function PatientTable({ patients, onToggleStatus }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title={hasLinkedUser ? (isActive ? 'Deactivate' : 'Activate') : 'Legacy patient record'}
+                      title={
+                        hasLinkedUser
+                          ? isActive
+                            ? "Deactivate"
+                            : "Activate"
+                          : "Legacy patient record"
+                      }
                       disabled={!hasLinkedUser}
                       onClick={() => onToggleStatus(patient._id, isActive)}
                     >
@@ -88,10 +101,10 @@ export default function PatientTable({ patients, onToggleStatus }) {
                   </div>
                 </TableCell>
               </TableRow>
-            )
+            );
           })}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

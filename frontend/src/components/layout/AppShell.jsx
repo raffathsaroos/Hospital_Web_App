@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar'
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar";
 
 // Keeps the sidebar around the current management page.
 export default function AppShell() {
@@ -12,5 +12,5 @@ export default function AppShell() {
         </main>
       </div>
     </div>
-  )
+  );
 }

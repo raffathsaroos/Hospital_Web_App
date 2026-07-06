@@ -1,25 +1,25 @@
-import patientService from '../services/patient.services.js';
+import patientService from "../services/patient.services.js";
 
 // Turns patient failures into useful API responses.
 const sendError = (res, error) => {
-  if (error.name === 'CastError') {
-    return res.status(400).json({ message: 'Invalid patient ID.' });
+  if (error.name === "CastError") {
+    return res.status(400).json({ message: "Invalid patient ID." });
   }
 
-  if (error.name === 'ValidationError') {
+  if (error.name === "ValidationError") {
     const errors = Object.values(error.errors).map(({ message }) => message);
-    return res.status(400).json({ message: 'Validation failed.', errors });
+    return res.status(400).json({ message: "Validation failed.", errors });
   }
 
   if (error.code === 11000) {
     const field = Object.keys(error.keyPattern || error.keyValue || {})[0];
     return res.status(409).json({
-      message: `A patient with this ${field || 'value'} already exists.`,
+      message: `A patient with this ${field || "value"} already exists.`,
     });
   }
 
   return res.status(error.statusCode || 500).json({
-    message: error.message || 'Internal server error.',
+    message: error.message || "Internal server error.",
   });
 };
 
@@ -28,7 +28,7 @@ const register = async (req, res) => {
   try {
     const patient = await patientService.registerPatient(req.body);
     res.status(201).json({
-      message: 'Patient registered successfully.',
+      message: "Patient registered successfully.",
       patient,
     });
   } catch (error) {
@@ -61,7 +61,7 @@ const update = async (req, res) => {
   try {
     const patient = await patientService.updatePatient(req.params.id, req.body);
     res.status(200).json({
-      message: 'Patient updated successfully.',
+      message: "Patient updated successfully.",
       patient,
     });
   } catch (error) {
@@ -72,17 +72,17 @@ const update = async (req, res) => {
 // Enables or disables a patient account.
 const setActiveStatus = async (req, res) => {
   try {
-    if (typeof req.body.isActive !== 'boolean') {
-      return res.status(400).json({ message: 'isActive must be a boolean.' });
+    if (typeof req.body.isActive !== "boolean") {
+      return res.status(400).json({ message: "isActive must be a boolean." });
     }
 
     const patient = await patientService.setPatientActiveStatus(
       req.params.id,
-      req.body.isActive
+      req.body.isActive,
     );
 
     res.status(200).json({
-      message: `Patient ${patient.user.isActive ? 'activated' : 'deactivated'} successfully.`,
+      message: `Patient ${patient.user.isActive ? "activated" : "deactivated"} successfully.`,
       patient,
     });
   } catch (error) {

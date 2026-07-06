@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
-import { Hospital, LogIn } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Link } from "react-router-dom";
+import { Hospital, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function PublicHeader() {
   return (
@@ -11,14 +11,22 @@ export default function PublicHeader() {
             <Hospital className="h-6 w-6" />
           </span>
           <span>
-            <span className="block text-lg font-bold leading-none">New Hospital</span>
+            <span className="block text-lg font-bold leading-none">
+              New Hospital
+            </span>
             <span className="text-xs text-slate-500">Care that connects</span>
           </span>
         </Link>
-        <Button variant="outline" asChild className="border-blue-200 text-blue-700 hover:bg-blue-50">
-          <Link to="/login"><LogIn /> Staff login</Link>
+        <Button
+          variant="outline"
+          asChild
+          className="border-blue-200 text-blue-700 hover:bg-blue-50"
+        >
+          <Link to="/login">
+            <LogIn /> Staff login
+          </Link>
         </Button>
       </div>
     </header>
-  )
+  );
 }
