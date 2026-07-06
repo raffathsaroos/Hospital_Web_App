@@ -260,9 +260,6 @@ export default function ClinicalWorkQueuePage({ type }) {
                       <p className="mt-1 text-2xl font-bold text-blue-800">
                         LKR {medicineTotal.toLocaleString()}
                       </p>
-                      <p className="mt-1 text-xs text-blue-600">
-                        Dosage × times per day × days × unit price
-                      </p>
                     </div>
                     <Button className="w-full" onClick={() => complete(record)}>
                       Dispense prescription

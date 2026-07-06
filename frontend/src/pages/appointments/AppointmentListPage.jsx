@@ -47,6 +47,8 @@ const roleActions = {
   Patient: { Pending: ["Cancelled"], Confirmed: ["Cancelled"] },
 };
 
+const receptionistCategories = ["All", "Rejected", "Paid", "Diagnosed"];
+
 function DoctorQueueSections({ appointments, onStatusChange }) {
   const waiting = appointments.filter((appointment) =>
     ["Pending", "Confirmed", "Paid"].includes(appointment.status),
@@ -178,6 +180,7 @@ export default function AppointmentListPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [paymentAppointment, setPaymentAppointment] = useState(null);
   const [roomNumber, setRoomNumber] = useState("");
+  const [receptionistCategory, setReceptionistCategory] = useState("All");
 
   useEffect(() => {
     async function load() {
@@ -198,6 +201,15 @@ export default function AppointmentListPage() {
       }),
     [appointments],
   );
+
+  const displayedAppointments = useMemo(() => {
+    if (user?.role !== "Receptionist" || receptionistCategory === "All") {
+      return orderedAppointments;
+    }
+    return orderedAppointments.filter(
+      (appointment) => appointment.status === receptionistCategory,
+    );
+  }, [orderedAppointments, receptionistCategory, user?.role]);
 
   async function performStatusChange(
     appointment,
@@ -290,6 +302,30 @@ export default function AppointmentListPage() {
             </CardContent>
           </Card>
         )}
+      {!loading && !error && user?.role === "Receptionist" && (
+        <div className="mb-5 flex flex-wrap gap-2 rounded-lg border bg-white p-3">
+          {receptionistCategories.map((category) => {
+            const count =
+              category === "All"
+                ? orderedAppointments.length
+                : orderedAppointments.filter(
+                    (appointment) => appointment.status === category,
+                  ).length;
+            return (
+              <Button
+                key={category}
+                size="sm"
+                variant={
+                  receptionistCategory === category ? "default" : "outline"
+                }
+                onClick={() => setReceptionistCategory(category)}
+              >
+                {category} ({count})
+              </Button>
+            );
+          })}
+        </div>
+      )}
       {user?.role === "Doctor" && !loading && !error && (
         <DoctorQueueSections
           appointments={orderedAppointments}
@@ -298,7 +334,7 @@ export default function AppointmentListPage() {
       )}
       {user?.role !== "Doctor" && (
         <div className="space-y-3">
-          {orderedAppointments.map((appointment) => {
+          {displayedAppointments.map((appointment) => {
             const patient = appointment.patientId ?? appointment.guestPatient;
             const doctor = appointment.doctorId;
             const actions = roleActions[user?.role]?.[appointment.status] ?? [];
@@ -385,6 +421,15 @@ export default function AppointmentListPage() {
               </Card>
             );
           })}
+          {user?.role === "Receptionist" &&
+            displayedAppointments.length === 0 &&
+            orderedAppointments.length > 0 && (
+              <Card>
+                <CardContent className="py-10 text-center text-slate-500">
+                  No {receptionistCategory.toLowerCase()} appointments.
+                </CardContent>
+              </Card>
+            )}
         </div>
       )}
       <ConfirmActionDialog
