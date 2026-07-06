@@ -107,6 +107,8 @@ const addDoctor = async (doctorData) => {
 // Lists doctors whose user accounts are still active.
 const getDoctors = () => doctorDao.findAllActiveDoctors();
 
+const getAllDoctors = () => doctorDao.findAllDoctors();
+
 // Returns one active doctor or reports that it is missing.
 const getDoctor = async (id) => {
   const doctor = await doctorDao.findActiveDoctorById(id);
@@ -115,6 +117,12 @@ const getDoctor = async (id) => {
     throw createError('Doctor not found.', 404);
   }
 
+  return doctor;
+};
+
+const getDoctorForAdmin = async (id) => {
+  const doctor = await doctorDao.findDoctorById(id);
+  if (!doctor || !doctor.userId) throw createError('Doctor not found.', 404);
   return doctor;
 };
 
@@ -185,7 +193,9 @@ const deactivateDoctor = async (id) => {
 export default {
   addDoctor,
   getDoctors,
+  getAllDoctors,
   getDoctor,
+  getDoctorForAdmin,
   updateDoctor,
   setDoctorActiveStatus,
   deactivateDoctor,

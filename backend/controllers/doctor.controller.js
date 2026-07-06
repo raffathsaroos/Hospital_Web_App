@@ -46,6 +46,20 @@ const getAll = async (_req, res) => {
   }
 };
 
+const getAllForAdmin = async (_req, res) => {
+  try {
+    const doctors = await doctorService.getAllDoctors();
+    res.status(200).json({ count: doctors.length, doctors });
+  } catch (error) { sendError(res, error); }
+};
+
+const getByIdForAdmin = async (req, res) => {
+  try {
+    const doctor = await doctorService.getDoctorForAdmin(req.params.id);
+    res.status(200).json({ doctor });
+  } catch (error) { sendError(res, error); }
+};
+
 // Returns one doctor selected by profile ID.
 const getById = async (req, res) => {
   try {
@@ -105,6 +119,8 @@ const remove = async (req, res) => {
 export default {
   create,
   getAll,
+  getAllForAdmin,
+  getByIdForAdmin,
   getById,
   update,
   setActiveStatus,

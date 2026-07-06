@@ -11,9 +11,11 @@ export const APPOINTMENT_TYPES = [
 // Defines every stage in the appointment workflow.
 export const APPOINTMENT_STATUSES = [
   'Pending',
-  'Accepted',
+  'Confirmed',
+  'Paid',
+  'InQueue',
+  'Diagnosed',
   'Rejected',
-  'Completed',
   'Cancelled',
 ];
 
@@ -126,6 +128,10 @@ const AppointmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    confirmedAt: { type: Date, default: null },
+    paidAt: { type: Date, default: null },
+    queuedAt: { type: Date, default: null },
+    diagnosedAt: { type: Date, default: null },
     tokenNumber: {
       type: Number,
       default: null,
@@ -182,7 +188,7 @@ AppointmentSchema.pre('validate', function validatePatientSource() {
 
 // A terminal status releases the unique slot for another booking.
 AppointmentSchema.pre('save', function syncSlotReservation() {
-  this.isSlotReserved = ['Pending', 'Accepted'].includes(this.status);
+  this.isSlotReserved = ['Pending', 'Confirmed', 'Paid', 'InQueue'].includes(this.status);
 });
 
 // Registers the booking schema with Mongoose.

@@ -4,14 +4,12 @@ import { toast } from 'sonner'
 import { UserPlus } from 'lucide-react'
 import TopBar from '@/components/layout/TopBar'
 import PatientTable from '@/components/patients/PatientTable'
-import DeletePatientDialog from '@/components/patients/DeletePatientDialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   getPatients,
-  deletePatient,
   setPatientStatus,
 } from '@/services/patientService'
 
@@ -20,8 +18,6 @@ export default function PatientListPage() {
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     // Loads the patient table when the page first opens.
@@ -37,20 +33,6 @@ export default function PatientListPage() {
     fetchPatients()
   }, [])
 
-  // Deletes the selected patient and removes its table row.
-  async function handleDelete(id) {
-    setDeleteLoading(true)
-    const { error } = await deletePatient(id)
-    if (error) {
-      toast.error(error)
-    } else {
-      setPatients((prev) => prev.filter((p) => p._id !== id))
-      toast.success('Patient deleted successfully')
-    }
-    setDeleteLoading(false)
-    setDeleteTarget(null)
-  }
-
   // Updates a patient's active state without reloading the page.
   async function handleToggleStatus(id, currentIsActive) {
     const { data, error } = await setPatientStatus(id, !currentIsActive)
@@ -65,14 +47,6 @@ export default function PatientListPage() {
       )
     }
   }
-
-  // Finds the selected name shown in the delete warning.
-  const deletePatientName = deleteTarget
-    ? (() => {
-        const p = patients.find((p) => p._id === deleteTarget)
-        return p ? `${p.user.firstName} ${p.user.lastName}` : ''
-      })()
-    : ''
 
   return (
     <div>
@@ -113,18 +87,9 @@ export default function PatientListPage() {
       {!loading && !error && patients.length > 0 && (
         <PatientTable
           patients={patients}
-          onDelete={setDeleteTarget}
           onToggleStatus={handleToggleStatus}
         />
       )}
-
-      <DeletePatientDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        patientName={deletePatientName}
-        onConfirm={() => handleDelete(deleteTarget)}
-        loading={deleteLoading}
-      />
     </div>
   )
 }

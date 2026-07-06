@@ -125,6 +125,13 @@ const updateStatus = async (req, res) => {
   }
 };
 
+const getQueue = async (req, res) => {
+  try {
+    const appointments = await appointmentService.getDoctorQueue(req.user, req.query.date);
+    res.status(200).json({ count: appointments.length, appointments });
+  } catch (error) { sendError(res, error); }
+};
+
 export default {
   createPublic,
   createByStaff,
@@ -132,4 +139,5 @@ export default {
   getById,
   reschedule,
   updateStatus,
+  getQueue,
 };

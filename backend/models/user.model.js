@@ -1,4 +1,9 @@
 import mongoose from 'mongoose';
+import crypto from 'node:crypto';
+import { promisify } from 'node:util';
+import { USER_ROLES } from '../constants/roles.const.js';
+
+const scrypt = promisify(crypto.scrypt);
 
 // Common account and profile fields shared by every user role.
 // Stores personal details shared by every hospital role.
@@ -59,14 +64,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Role is required'],
       enum: {
-        values: [
-          'Patient',
-          'Doctor',
-          'Admin',
-          'Nurse',
-          'Pharmacist',
-          'Receptionist',
-        ],
+        values: USER_ROLES,
         message: 'Invalid role',
       },
     },
@@ -101,6 +99,27 @@ const UserSchema = new mongoose.Schema(
 
 // Speeds up lists that group accounts by hospital role.
 UserSchema.index({ role: 1 });
+
+// Hashes new and changed passwords without adding an external dependency.
+UserSchema.pre('save', async function hashPassword() {
+  if (!this.isModified('password')) return;
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = await scrypt(this.password, salt, 64);
+  this.password = `scrypt:${salt}:${Buffer.from(hash).toString('hex')}`;
+  this.passwordChangedAt = new Date();
+});
+
+UserSchema.methods.comparePassword = async function comparePassword(candidate) {
+  if (!this.password?.startsWith('scrypt:')) {
+    return this.password === candidate;
+  }
+  const [, salt, storedHash] = this.password.split(':');
+  const candidateHash = await scrypt(candidate, salt, 64);
+  const storedBuffer = Buffer.from(storedHash, 'hex');
+  const candidateBuffer = Buffer.from(candidateHash);
+  return storedBuffer.length === candidateBuffer.length &&
+    crypto.timingSafeEqual(storedBuffer, candidateBuffer);
+};
 
 // Registers the shared account schema with Mongoose.
 const User = mongoose.model('User', UserSchema);

@@ -10,12 +10,8 @@ const findAllPatients = () =>
 // Finds one patient and loads the linked account.
 const findPatientById = (id) => Patient.findById(id).populate('user');
 
-// Permanently removes one patient profile.
-const deletePatientById = (id) => Patient.findByIdAndDelete(id);
-
 export default {
   createPatient,
   findAllPatients,
   findPatientById,
-  deletePatientById,
 };

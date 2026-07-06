@@ -90,21 +90,10 @@ const setActiveStatus = async (req, res) => {
   }
 };
 
-// Permanently removes a patient and linked account.
-const remove = async (req, res) => {
-  try {
-    await patientService.deletePatient(req.params.id);
-    res.status(200).json({ message: 'Patient deleted successfully.' });
-  } catch (error) {
-    sendError(res, error);
-  }
-};
-
 export default {
   register,
   getAll,
   getById,
   update,
   setActiveStatus,
-  remove,
 };

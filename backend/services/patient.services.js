@@ -106,19 +106,10 @@ const setPatientActiveStatus = async (id, isActive) => {
   return patientDao.findPatientById(id);
 };
 
-// Removes both the patient profile and its user account.
-const deletePatient = async (id) => {
-  const patient = await getPatient(id);
-
-  await patientDao.deletePatientById(id);
-  await userDao.deleteUserById(patient.user._id);
-};
-
 export default {
   registerPatient,
   getPatients,
   getPatient,
   updatePatient,
   setPatientActiveStatus,
-  deletePatient,
 };

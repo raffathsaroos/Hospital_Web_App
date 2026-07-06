@@ -55,7 +55,7 @@ const findSlotConflict = ({
     appointmentDate,
     timeSlot,
     status: {
-      $in: ['Pending', 'Accepted'],
+      $in: ['Pending', 'Confirmed', 'Paid', 'InQueue'],
     },
   };
 
@@ -83,6 +83,12 @@ const findActivePatient = (id) =>
     isActive: true,
   });
 
+const findDoctorQueue = (doctorId, date) => {
+  const filter = { doctorId, status: 'InQueue' };
+  if (date) filter.appointmentDate = date;
+  return populatePeople(Appointment.find(filter).sort({ appointmentDate: 1, timeSlot: 1, createdAt: 1 }));
+};
+
 export default {
   createAppointment,
   findAppointments,
@@ -91,4 +97,5 @@ export default {
   findSlotConflict,
   findDoctorProfile,
   findActivePatient,
+  findDoctorQueue,
 };

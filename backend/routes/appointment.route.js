@@ -26,6 +26,7 @@ router.get(
   authorize(...appointmentReaders),
   appointmentController.getAll
 );
+router.get('/queue/me', authenticate, authorize('Doctor'), appointmentController.getQueue);
 router.get(
   '/:id',
   authenticate,

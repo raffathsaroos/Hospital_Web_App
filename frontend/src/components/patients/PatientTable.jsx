@@ -4,10 +4,10 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Edit, ToggleLeft, ToggleRight } from 'lucide-react'
 
 // Shows patient details with status, edit, and delete actions.
-export default function PatientTable({ patients, onDelete, onToggleStatus }) {
+export default function PatientTable({ patients, onToggleStatus }) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -48,8 +48,8 @@ export default function PatientTable({ patients, onDelete, onToggleStatus }) {
                     variant="outline"
                     className={
                       user.isActive
-                        ? 'border-green-500 bg-green-50 text-green-600'
-                        : 'border-red-400 bg-red-50 text-red-600'
+                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                        : 'border-orange-300 bg-orange-50 text-orange-700'
                     }
                   >
                     {user.isActive ? 'Active' : 'Inactive'}
@@ -64,7 +64,7 @@ export default function PatientTable({ patients, onDelete, onToggleStatus }) {
                       onClick={() => onToggleStatus(patient._id, user.isActive)}
                     >
                       {user.isActive ? (
-                        <ToggleRight className="h-4 w-4 text-green-600" />
+                        <ToggleRight className="h-4 w-4 text-blue-600" />
                       ) : (
                         <ToggleLeft className="h-4 w-4 text-slate-400" />
                       )}
@@ -73,13 +73,6 @@ export default function PatientTable({ patients, onDelete, onToggleStatus }) {
                       <Link to={`/patients/${patient._id}/edit`}>
                         <Edit className="h-4 w-4 text-slate-600" />
                       </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(patient._id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </TableCell>

@@ -28,12 +28,27 @@ const findUserByUniqueFields = ({ email, phone, nic }, excludeId) => {
 // Inserts one user account.
 const createUser = (userData) => User.create(userData);
 
+const findUsers = (filter = {}) =>
+  User.find(filter).sort({ createdAt: -1 });
+
+const findUserById = (id, includePassword = false) => {
+  const query = User.findById(id);
+  return includePassword ? query.select('+password') : query;
+};
+
 // Saves validated changes and returns the fresh account.
-const updateUserById = (id, userData) =>
-  User.findByIdAndUpdate(id, userData, {
-    new: true,
-    runValidators: true,
-  });
+const updateUserById = async (id, userData) => {
+  // Password changes must pass through the model save hook.
+  if (userData.password !== undefined) {
+    const user = await User.findById(id).select('+password');
+    if (!user) return null;
+    Object.assign(user, userData);
+    await user.save();
+    user.password = undefined;
+    return user;
+  }
+  return User.findByIdAndUpdate(id, userData, { new: true, runValidators: true });
+};
 
 // Permanently removes one user account.
 const deleteUserById = (id) => User.findByIdAndDelete(id);
@@ -42,6 +57,8 @@ export default {
   findUserByEmail,
   findUserByUniqueFields,
   createUser,
+  findUsers,
+  findUserById,
   updateUserById,
   deleteUserById,
 };

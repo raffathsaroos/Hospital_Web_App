@@ -49,6 +49,17 @@ const ensureFutureDate = (date) => {
   }
 };
 
+const ensureFutureTime = (date, timeSlot) => {
+  const now = new Date();
+  const isToday = date.getUTCFullYear() === now.getFullYear() &&
+    date.getUTCMonth() === now.getMonth() && date.getUTCDate() === now.getDate();
+  if (!isToday) return;
+  const [startTime] = timeSlot.split(' - ');
+  if (toMinutes(startTime) <= now.getHours() * 60 + now.getMinutes()) {
+    throw createError('Cannot book a time slot that has already passed.', 400);
+  }
+};
+
 // Converts a clock value into minutes for easy comparison.
 const toMinutes = (time) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -174,6 +185,8 @@ const prepareBooking = async (data) => {
   const appointmentDate = parseDate(data.appointmentDate);
   const timeSlot = data.timeSlot.trim();
   ensureFutureDate(appointmentDate);
+  parseTimeSlot(timeSlot);
+  ensureFutureTime(appointmentDate, timeSlot);
 
   const doctor = await appointmentDao.findDoctorProfile(data.doctorId);
   ensureAvailableSlot(doctor, appointmentDate, timeSlot);
@@ -400,16 +413,20 @@ const rescheduleAppointment = async (id, data) => {
 };
 
 const statusTransitions = {
-  Pending: ['Accepted', 'Rejected', 'Cancelled'],
-  Accepted: ['Completed', 'Cancelled'],
+  Pending: ['Confirmed', 'Rejected', 'Cancelled'],
+  Confirmed: ['Paid', 'Cancelled'],
+  Paid: ['InQueue', 'Cancelled'],
+  InQueue: ['Diagnosed', 'Cancelled'],
   Rejected: [],
-  Completed: [],
+  Diagnosed: [],
   Cancelled: [],
 };
 
 // Checks whether a role may apply the requested status.
 const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
-  if (staffRoles.includes(actor.role)) return;
+  if (actor.role === 'Admin') return;
+
+  if (actor.role === 'Receptionist' && ['Confirmed', 'Paid', 'InQueue', 'Rejected', 'Cancelled'].includes(nextStatus)) return;
 
   if (actor.role === 'Patient') {
     if (
@@ -423,7 +440,7 @@ const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
   if (actor.role === 'Doctor') {
     const ownsAppointment =
       appointment.doctorId.toString() === actor._id.toString();
-    const doctorStatus = ['Rejected', 'Completed'].includes(nextStatus);
+    const doctorStatus = ['Rejected', 'Diagnosed'].includes(nextStatus);
 
     if (ownsAppointment && doctorStatus) return;
   }
@@ -438,7 +455,10 @@ const ensureRoleCanSetStatus = (appointment, actor, nextStatus) => {
 const updateAppointmentStatus = async (id, data, actor) => {
   requireValidId(id, 'appointment ID');
 
-  if (!APPOINTMENT_STATUSES.includes(data.status)) {
+  const aliases = { Accepted: 'Confirmed', Completed: 'Diagnosed' };
+  const nextStatus = aliases[data.status] || data.status;
+
+  if (!APPOINTMENT_STATUSES.includes(nextStatus)) {
     throw createError('Invalid appointment status.', 400);
   }
 
@@ -449,29 +469,39 @@ const updateAppointmentStatus = async (id, data, actor) => {
     throw createError('Appointment not found.', 404);
   }
 
-  ensureRoleCanSetStatus(appointment, actor, data.status);
+  ensureRoleCanSetStatus(appointment, actor, nextStatus);
 
-  if (!statusTransitions[appointment.status].includes(data.status)) {
+  if (!statusTransitions[appointment.status]?.includes(nextStatus)) {
     throw createError(
-      `Cannot change ${appointment.status} to ${data.status}.`,
+      `Cannot change ${appointment.status} to ${nextStatus}.`,
       409
     );
   }
 
-  if (data.status === 'Rejected' && !data.rejectionReason?.trim()) {
+  if (nextStatus === 'Rejected' && !data.rejectionReason?.trim()) {
     throw createError('Rejection reason is required.', 400);
   }
 
-  appointment.status = data.status;
+  appointment.status = nextStatus;
   appointment.rejectionReason =
-    data.status === 'Rejected' ? data.rejectionReason : '';
+    nextStatus === 'Rejected' ? data.rejectionReason : '';
 
-  if (data.status === 'Completed') {
+  if (nextStatus === 'Confirmed') appointment.confirmedAt = new Date();
+  if (nextStatus === 'Paid') appointment.paidAt = new Date();
+  if (nextStatus === 'InQueue') appointment.queuedAt = new Date();
+  if (nextStatus === 'Diagnosed') {
     appointment.hasVisited = true;
+    appointment.diagnosedAt = new Date();
   }
 
   await appointment.save();
   return appointmentDao.findAppointmentById(appointment._id);
+};
+
+const getDoctorQueue = async (actor, dateValue) => {
+  if (actor.role !== 'Doctor') throw createError('Only doctors can access their queue.', 403);
+  const date = dateValue ? parseDate(dateValue) : undefined;
+  return appointmentDao.findDoctorQueue(actor._id, date);
 };
 
 export default {
@@ -481,4 +511,5 @@ export default {
   getAppointment,
   rescheduleAppointment,
   updateAppointmentStatus,
+  getDoctorQueue,
 };
