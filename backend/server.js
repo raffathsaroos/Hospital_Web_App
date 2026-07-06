@@ -7,6 +7,7 @@ import patientRoutes from "./routes/patient.route.js";
 import appointmentRoutes from "./routes/appointment.route.js";
 import doctorRoutes from "./routes/doctor.route.js";
 import clinicalRoutes from "./routes/clinical.route.js";
+import dashboardRoutes from "./routes/dashboard.route.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api", clinicalRoutes);
+app.use("/api", dashboardRoutes);
 
 // Consistent response for unknown API endpoints.
 app.use("/api", (_req, res) =>

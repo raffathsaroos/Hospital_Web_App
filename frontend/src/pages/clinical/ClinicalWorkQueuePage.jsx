@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import TopBar from "@/components/layout/TopBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -33,23 +34,33 @@ const settings = {
 export default function ClinicalWorkQueuePage({ type }) {
   const config = settings[type];
   const [records, setRecords] = useState([]);
+  const [completedRecords, setCompletedRecords] = useState([]);
   const [forms, setForms] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    config.load({ status: "Pending" }).then((result) => {
+    const params = type === "pharmacy" ? {} : { status: "Pending" };
+    config.load(params).then((result) => {
       if (result.error) setError(result.error);
-      else
-        setRecords(
+      else {
+        const loadedRecords =
           result.data.prescriptions ??
-            result.data.labRequests ??
-            result.data.radiologyRequests ??
-            [],
+          result.data.labRequests ??
+          result.data.radiologyRequests ??
+          [];
+        setRecords(
+          loadedRecords.filter((record) => record.status === "Pending"),
         );
+        if (type === "pharmacy") {
+          setCompletedRecords(
+            loadedRecords.filter((record) => record.status === "Dispensed"),
+          );
+        }
+      }
       setLoading(false);
     });
-  }, [config]);
+  }, [config, type]);
 
   const update = (id, field, value) =>
     setForms((current) => ({
@@ -86,6 +97,19 @@ export default function ClinicalWorkQueuePage({ type }) {
     }
     if (result.error) return toast.error(result.error);
     setRecords((current) => current.filter((item) => item._id !== record._id));
+    if (type === "pharmacy") {
+      const dispensed = result.data.prescription;
+      setCompletedRecords((current) => [
+        {
+          ...record,
+          ...dispensed,
+          patientId: record.patientId,
+          doctorId: record.doctorId,
+          appointmentId: record.appointmentId,
+        },
+        ...current,
+      ]);
+    }
     toast.success(
       type === "pharmacy" ? "Prescription dispensed" : "Request completed",
     );
@@ -118,6 +142,7 @@ export default function ClinicalWorkQueuePage({ type }) {
           const patient =
             record.patientId ?? record.appointmentId?.guestPatient;
           const form = forms[record._id] ?? {};
+          const medicineTotal = calculateMedicineTotal(form);
           return (
             <Card key={record._id}>
               <CardHeader>
@@ -162,8 +187,8 @@ export default function ClinicalWorkQueuePage({ type }) {
                       <Field label="Dosage quantity">
                         <Input
                           type="number"
-                          min="0.01"
-                          step="0.01"
+                          min="1"
+                          step="1"
                           value={form.dosageQuantity ?? ""}
                           onChange={(event) =>
                             update(
@@ -178,6 +203,7 @@ export default function ClinicalWorkQueuePage({ type }) {
                         <Input
                           type="number"
                           min="1"
+                          step="1"
                           value={form.frequencyPerDay ?? ""}
                           onChange={(event) =>
                             update(
@@ -192,6 +218,7 @@ export default function ClinicalWorkQueuePage({ type }) {
                         <Input
                           type="number"
                           min="1"
+                          step="1"
                           value={form.numberOfDays ?? ""}
                           onChange={(event) =>
                             update(
@@ -205,14 +232,25 @@ export default function ClinicalWorkQueuePage({ type }) {
                       <Field label="Unit price">
                         <Input
                           type="number"
-                          min="0.01"
-                          step="0.01"
+                          min="1"
+                          step="1"
                           value={form.unitPrice ?? ""}
                           onChange={(event) =>
                             update(record._id, "unitPrice", event.target.value)
                           }
                         />
                       </Field>
+                    </div>
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
+                        Total
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-blue-800">
+                        LKR {medicineTotal.toLocaleString()}
+                      </p>
+                      <p className="mt-1 text-xs text-blue-600">
+                        Dosage × times per day × days × unit price
+                      </p>
                     </div>
                     <Button className="w-full" onClick={() => complete(record)}>
                       Dispense prescription
@@ -290,6 +328,9 @@ export default function ClinicalWorkQueuePage({ type }) {
           );
         })}
       </div>
+      {type === "pharmacy" && (
+        <DispensedPrescriptionHistory records={completedRecords} />
+      )}
     </div>
   );
 }
@@ -316,5 +357,125 @@ function TextArea(props) {
       className="min-h-24 w-full rounded-md border bg-white px-3 py-2 text-sm"
       {...props}
     />
+  );
+}
+
+function calculateMedicineTotal(form) {
+  const values = [
+    form.dosageQuantity,
+    form.frequencyPerDay,
+    form.numberOfDays,
+    form.unitPrice,
+  ].map(Number);
+
+  if (values.some((value) => !Number.isInteger(value) || value <= 0)) return 0;
+  return values.reduce((total, value) => total * value, 1);
+}
+
+function DispensedPrescriptionHistory({ records }) {
+  const [expandedRecords, setExpandedRecords] = useState(() => new Set());
+
+  function toggleRecord(recordId) {
+    setExpandedRecords((current) => {
+      const next = new Set(current);
+      if (next.has(recordId)) next.delete(recordId);
+      else next.add(recordId);
+      return next;
+    });
+  }
+
+  return (
+    <section className="mt-10 space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900">
+          Dispensed Prescriptions
+        </h2>
+        <p className="text-sm text-slate-500">
+          Previously completed prescriptions remain available for review.
+        </p>
+      </div>
+      {records.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-slate-500">
+            No prescriptions have been dispensed yet.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {records.map((record) => {
+            const patient =
+              record.patientId ?? record.appointmentId?.guestPatient;
+            const expanded = expandedRecords.has(record._id);
+            return (
+              <Card key={record._id} className="border-slate-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <CardTitle>
+                        {patient
+                          ? `${patient.firstName} ${patient.lastName}`
+                          : "Guest patient"}
+                      </CardTitle>
+                      {expanded && (
+                        <CardDescription>
+                          {record.dispensedAt
+                            ? new Date(record.dispensedAt).toLocaleString()
+                            : "Dispensed"}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {expanded && (
+                        <Badge className="bg-blue-600">Dispensed</Badge>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleRecord(record._id)}
+                      >
+                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                        {expanded ? "Collapse" : "Expand"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                {expanded && (
+                  <CardContent className="space-y-3">
+                    <Info
+                      label="Doctor instructions"
+                      value={
+                        record.instructions || "No additional instructions"
+                      }
+                    />
+                    {record.medicines?.map((medicine) => (
+                      <div key={medicine._id} className="rounded-md border p-3">
+                        <p className="font-medium text-slate-900">
+                          {medicine.medicineName}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {medicine.dosageQuantity} dosage ×{" "}
+                          {medicine.frequencyPerDay}
+                          {" times/day × "}
+                          {medicine.numberOfDays} days × LKR{" "}
+                          {medicine.unitPrice}
+                        </p>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between rounded-md bg-blue-50 p-3">
+                      <span className="font-medium text-blue-700">
+                        Grand total
+                      </span>
+                      <span className="text-lg font-bold text-blue-800">
+                        LKR {Number(record.grandTotal ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }

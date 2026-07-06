@@ -109,9 +109,9 @@ const dispensePrescription = async (id, data, actor) => {
       item.numberOfDays,
       item.unitPrice,
     ].map(Number);
-    if (values.some((value) => !Number.isFinite(value) || value <= 0))
+    if (values.some((value) => !Number.isInteger(value) || value <= 0))
       throw error(
-        "Medicine quantities, frequency, days, and price must be positive.",
+        "Medicine quantities, frequency, days, and price must be positive whole numbers.",
         400,
       );
     return {
