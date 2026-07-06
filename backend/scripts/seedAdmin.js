@@ -1,11 +1,8 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import dns from 'node:dns';
 import User from '../models/user.model.js';
 
-// Some Windows/Node combinations reject Atlas SRV lookups through the
-// automatically selected resolver even when normal DNS lookups work.
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+const LOCAL_MONGO_URI = 'mongodb://127.0.0.1:27017/hospital_db';
 
 const required = ['ADMIN_FIRST_NAME', 'ADMIN_LAST_NAME', 'ADMIN_EMAIL', 'ADMIN_PHONE', 'ADMIN_NIC', 'ADMIN_DOB', 'ADMIN_GENDER', 'ADMIN_PASSWORD'];
 const missing = required.filter((key) => !process.env[key]);
@@ -14,7 +11,7 @@ if (missing.length) {
   process.exit(1);
 }
 
-await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hospital_db');
+await mongoose.connect(LOCAL_MONGO_URI);
 try {
   const adminData = {
     firstName: process.env.ADMIN_FIRST_NAME,

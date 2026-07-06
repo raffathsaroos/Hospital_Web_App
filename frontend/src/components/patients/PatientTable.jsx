@@ -25,34 +25,42 @@ export default function PatientTable({ patients, onToggleStatus }) {
         </TableHeader>
         <TableBody>
           {patients.map((patient) => {
-            const user = patient.user
+            const hasLinkedUser = Boolean(patient.user)
+            const user = patient.user ?? patient
+            const isActive = hasLinkedUser
+              ? user.isActive
+              : user.status === 'active' || user.status === 'actives'
             return (
               <TableRow key={patient._id}>
                 <TableCell className="font-medium">
-                  <Link
-                    to={`/patients/${patient._id}`}
-                    className="text-primary hover:underline"
-                  >
-                    {user.firstName} {user.lastName}
-                  </Link>
+                  {hasLinkedUser ? (
+                    <Link
+                      to={`/patients/${patient._id}`}
+                      className="text-primary hover:underline"
+                    >
+                      {user.firstName} {user.lastName}
+                    </Link>
+                  ) : (
+                    <span>{user.firstName} {user.lastName}</span>
+                  )}
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
-                <TableCell>{user.nic}</TableCell>
+                <TableCell>{user.nic ?? user.nationalId ?? '—'}</TableCell>
                 <TableCell>
-                  {new Date(user.dob).toLocaleDateString()}
+                  {user.dob ? new Date(user.dob).toLocaleDateString() : '—'}
                 </TableCell>
-                <TableCell>{user.gender}</TableCell>
+                <TableCell>{user.gender ?? '—'}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
                     className={
-                      user.isActive
+                      isActive
                         ? 'border-blue-300 bg-blue-50 text-blue-700'
                         : 'border-orange-300 bg-orange-50 text-orange-700'
                     }
                   >
-                    {user.isActive ? 'Active' : 'Inactive'}
+                    {isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -60,20 +68,23 @@ export default function PatientTable({ patients, onToggleStatus }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title={user.isActive ? 'Deactivate' : 'Activate'}
-                      onClick={() => onToggleStatus(patient._id, user.isActive)}
+                      title={hasLinkedUser ? (isActive ? 'Deactivate' : 'Activate') : 'Legacy patient record'}
+                      disabled={!hasLinkedUser}
+                      onClick={() => onToggleStatus(patient._id, isActive)}
                     >
-                      {user.isActive ? (
+                      {isActive ? (
                         <ToggleRight className="h-4 w-4 text-blue-600" />
                       ) : (
                         <ToggleLeft className="h-4 w-4 text-slate-400" />
                       )}
                     </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to={`/patients/${patient._id}/edit`}>
-                        <Edit className="h-4 w-4 text-slate-600" />
-                      </Link>
-                    </Button>
+                    {hasLinkedUser && (
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link to={`/patients/${patient._id}/edit`}>
+                          <Edit className="h-4 w-4 text-slate-600" />
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

@@ -1,21 +1,4 @@
-import axios from 'axios'
-
-const http = axios.create({ baseURL: '/api' })
-
-// Runs an API request and gives every page the same result shape.
-async function call(fn) {
-  try {
-    const res = await fn()
-    return { data: res.data, error: null }
-  } catch (err) {
-    const body = err.response?.data
-    const message =
-      body?.errors?.map?.((e) => e.message ?? e)?.join(', ') ??
-      body?.message ??
-      'Something went wrong'
-    return { data: null, error: message }
-  }
-}
+import { call, http } from './api'
 
 // Loads all patients for the management table.
 export const getPatients      = ()           => call(() => http.get('/patients'))

@@ -7,9 +7,6 @@ import patientRoutes from './routes/patient.route.js';
 import appointmentRoutes from './routes/appointment.route.js';
 import doctorRoutes from './routes/doctor.route.js';
 import clinicalRoutes from './routes/clinical.route.js';
-import dns from 'dns';
-
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const app = express();
 
@@ -17,13 +14,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Use the local hospital database when no environment URL is provided.
-const MONGO_URI =
-  process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hospital_db';
+const LOCAL_MONGO_URI = 'mongodb://127.0.0.1:27017/hospital_db';
 
 mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .connect(LOCAL_MONGO_URI)
+  .then(() => console.log('Connected to local MongoDB'))
   .catch((error) => console.error('DB Connection Error:', error));
 
 // API routes pass requests through controllers, services, and DAOs.
