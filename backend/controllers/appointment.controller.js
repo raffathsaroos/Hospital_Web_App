@@ -1,43 +1,42 @@
-import appointmentService from '../services/appointment.services.js';
+import appointmentService from "../services/appointment.services.js";
 
 // Turns appointment failures into stable API responses.
 const sendError = (res, error) => {
-  if (error.name === 'ValidationError') {
-    const errors = Object.values(error.errors).map(
-      ({ message }) => message
-    );
+  if (error.name === "ValidationError") {
+    const errors = Object.values(error.errors).map(({ message }) => message);
 
     return res.status(400).json({
-      message: 'Validation failed.',
+      message: "Validation failed.",
       errors,
     });
   }
 
-  if (error.name === 'CastError') {
+  if (error.name === "CastError") {
     return res.status(400).json({
-      message: 'Invalid appointment data.',
+      message: "Invalid appointment data.",
     });
   }
 
   if (error.code === 11000) {
     return res.status(409).json({
-      message: 'Selected time slot is already booked.',
+      message: "Selected time slot is already booked.",
     });
   }
 
   return res.status(error.statusCode || 500).json({
-    message: error.message || 'Internal server error.',
+    message: error.message || "Internal server error.",
   });
 };
 
 // Accepts an appointment request from a guest patient.
 const createPublic = async (req, res) => {
   try {
-    const appointment =
-      await appointmentService.createPublicAppointment(req.body);
+    const appointment = await appointmentService.createPublicAppointment(
+      req.body,
+    );
 
     res.status(201).json({
-      message: 'Appointment request submitted successfully.',
+      message: "Appointment request submitted successfully.",
       appointment,
     });
   } catch (error) {
@@ -48,11 +47,12 @@ const createPublic = async (req, res) => {
 // Lets hospital staff create an appointment for a patient.
 const createByStaff = async (req, res) => {
   try {
-    const appointment =
-      await appointmentService.createStaffAppointment(req.body);
+    const appointment = await appointmentService.createStaffAppointment(
+      req.body,
+    );
 
     res.status(201).json({
-      message: 'Appointment created successfully.',
+      message: "Appointment created successfully.",
       appointment,
     });
   } catch (error) {
@@ -65,7 +65,7 @@ const getAll = async (req, res) => {
   try {
     const result = await appointmentService.getAppointments(
       req.query,
-      req.user
+      req.user,
     );
 
     res.status(200).json(result);
@@ -79,7 +79,7 @@ const getById = async (req, res) => {
   try {
     const appointment = await appointmentService.getAppointment(
       req.params.id,
-      req.user
+      req.user,
     );
 
     res.status(200).json({ appointment });
@@ -91,14 +91,13 @@ const getById = async (req, res) => {
 // Moves a pending appointment to a new date or slot.
 const reschedule = async (req, res) => {
   try {
-    const appointment =
-      await appointmentService.rescheduleAppointment(
-        req.params.id,
-        req.body
-      );
+    const appointment = await appointmentService.rescheduleAppointment(
+      req.params.id,
+      req.body,
+    );
 
     res.status(200).json({
-      message: 'Appointment rescheduled successfully.',
+      message: "Appointment rescheduled successfully.",
       appointment,
     });
   } catch (error) {
@@ -109,15 +108,14 @@ const reschedule = async (req, res) => {
 // Applies an allowed appointment status change.
 const updateStatus = async (req, res) => {
   try {
-    const appointment =
-      await appointmentService.updateAppointmentStatus(
-        req.params.id,
-        req.body,
-        req.user
-      );
+    const appointment = await appointmentService.updateAppointmentStatus(
+      req.params.id,
+      req.body,
+      req.user,
+    );
 
     res.status(200).json({
-      message: 'Appointment status updated successfully.',
+      message: "Appointment status updated successfully.",
       appointment,
     });
   } catch (error) {
@@ -127,9 +125,14 @@ const updateStatus = async (req, res) => {
 
 const getQueue = async (req, res) => {
   try {
-    const appointments = await appointmentService.getDoctorQueue(req.user, req.query.date);
+    const appointments = await appointmentService.getDoctorQueue(
+      req.user,
+      req.query.date,
+    );
     res.status(200).json({ count: appointments.length, appointments });
-  } catch (error) { sendError(res, error); }
+  } catch (error) {
+    sendError(res, error);
+  }
 };
 
 export default {

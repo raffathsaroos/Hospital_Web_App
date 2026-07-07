@@ -1,9 +1,9 @@
-import Doctor from '../models/doctor.model.js';
+import Doctor from "../models/doctor.model.js";
 
 // Public doctor endpoints expose only directory-safe account fields.
-const userFields = 'firstName lastName role isActive avatar';
+const userFields = "firstName lastName role isActive avatar";
 const adminUserFields =
-  'firstName lastName email phone nic dob gender role isActive avatar';
+  "firstName lastName email phone nic dob gender role isActive avatar";
 
 // Inserts one doctor profile.
 const createDoctor = (doctorData) => Doctor.create(doctorData);
@@ -12,7 +12,7 @@ const createDoctor = (doctorData) => Doctor.create(doctorData);
 const findAllActiveDoctors = async () => {
   const doctors = await Doctor.find()
     .populate({
-      path: 'userId',
+      path: "userId",
       match: { isActive: true },
       select: userFields,
     })
@@ -23,19 +23,19 @@ const findAllActiveDoctors = async () => {
 
 // Admin management includes inactive accounts so they can be reactivated.
 const findAllDoctors = () =>
-  Doctor.find().populate('userId', adminUserFields).sort({ createdAt: -1 });
+  Doctor.find().populate("userId", adminUserFields).sort({ createdAt: -1 });
 
 // Finds one visible doctor and safe account details.
 const findActiveDoctorById = (id) =>
   Doctor.findById(id).populate({
-    path: 'userId',
+    path: "userId",
     match: { isActive: true },
     select: userFields,
   });
 
 // Finds a doctor even when its account is inactive.
 const findDoctorById = (id) =>
-  Doctor.findById(id).populate('userId', adminUserFields);
+  Doctor.findById(id).populate("userId", adminUserFields);
 
 // Finds another doctor that uses the same license number.
 const findDoctorByLicense = (licenseNumber, excludeId) => {

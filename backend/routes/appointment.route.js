@@ -1,49 +1,49 @@
-import express from 'express';
-import appointmentController from '../controllers/appointment.controller.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { authorize } from '../middleware/authorize.middleware.js';
+import express from "express";
+import appointmentController from "../controllers/appointment.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { authorize } from "../middleware/authorize.middleware.js";
 
 const router = express.Router();
 
-const appointmentReaders = [
-  'Admin',
-  'Receptionist',
-  'Doctor',
-  'Patient',
-];
+const appointmentReaders = ["Admin", "Receptionist", "Doctor", "Patient"];
 
 // Guest booking stays public; every management action is authenticated.
-router.post('/public', appointmentController.createPublic);
+router.post("/public", appointmentController.createPublic);
 router.post(
-  '/',
+  "/",
   authenticate,
-  authorize('Admin', 'Receptionist'),
-  appointmentController.createByStaff
+  authorize("Admin", "Receptionist"),
+  appointmentController.createByStaff,
 );
 router.get(
-  '/',
+  "/",
   authenticate,
   authorize(...appointmentReaders),
-  appointmentController.getAll
+  appointmentController.getAll,
 );
-router.get('/queue/me', authenticate, authorize('Doctor'), appointmentController.getQueue);
 router.get(
-  '/:id',
+  "/queue/me",
+  authenticate,
+  authorize("Doctor"),
+  appointmentController.getQueue,
+);
+router.get(
+  "/:id",
   authenticate,
   authorize(...appointmentReaders),
-  appointmentController.getById
+  appointmentController.getById,
 );
 router.put(
-  '/:id',
+  "/:id",
   authenticate,
-  authorize('Admin', 'Receptionist'),
-  appointmentController.reschedule
+  authorize("Admin", "Receptionist"),
+  appointmentController.reschedule,
 );
 router.patch(
-  '/:id/status',
+  "/:id/status",
   authenticate,
   authorize(...appointmentReaders),
-  appointmentController.updateStatus
+  appointmentController.updateStatus,
 );
 
 export default router;

@@ -1,22 +1,19 @@
-import patientDao from '../dao/patient.dao.js';
-import userDao from '../dao/user.dao.js';
+import patientDao from "../dao/patient.dao.js";
+import userDao from "../dao/user.dao.js";
 
 // Only these common account fields may enter the User document from patient APIs.
 const registrationUserFields = [
-  'firstName',
-  'lastName',
-  'email',
-  'phone',
-  'nic',
-  'dob',
-  'gender',
-  'password',
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "nic",
+  "dob",
+  "gender",
+  "password",
 ];
 
-const editableUserFields = [
-  ...registrationUserFields,
-  'avatar',
-];
+const editableUserFields = [...registrationUserFields, "avatar"];
 
 // Builds an error with the status expected by the API.
 const createError = (message, statusCode) => {
@@ -28,12 +25,15 @@ const createError = (message, statusCode) => {
 // Copies only fields that the patient API accepts.
 const pickFields = (data, allowedFields) =>
   Object.fromEntries(
-    Object.entries(data).filter(([key]) => allowedFields.includes(key))
+    Object.entries(data).filter(([key]) => allowedFields.includes(key)),
   );
 
 // Makes sure identity fields do not belong to another user.
 const ensureUniqueUser = async (userData, excludeId) => {
-  const existingUser = await userDao.findUserByUniqueFields(userData, excludeId);
+  const existingUser = await userDao.findUserByUniqueFields(
+    userData,
+    excludeId,
+  );
 
   if (!existingUser) return;
 
@@ -41,14 +41,14 @@ const ensureUniqueUser = async (userData, excludeId) => {
     userData.email &&
     existingUser.email === userData.email.toLowerCase().trim()
   ) {
-    throw createError('A user with this email already exists.', 409);
+    throw createError("A user with this email already exists.", 409);
   }
 
   if (userData.phone && existingUser.phone === userData.phone.trim()) {
-    throw createError('A user with this phone number already exists.', 409);
+    throw createError("A user with this phone number already exists.", 409);
   }
 
-  throw createError('A user with this NIC already exists.', 409);
+  throw createError("A user with this NIC already exists.", 409);
 };
 
 // Creates a patient account and profile as one workflow.
@@ -60,7 +60,7 @@ const registerPatient = async (patientData) => {
   const user = await userDao.createUser({
     ...userData,
     // Patient registration must never create a privileged account.
-    role: 'Patient',
+    role: "Patient",
   });
 
   try {
@@ -81,7 +81,7 @@ const getPatient = async (id) => {
   const patient = await patientDao.findPatientById(id);
 
   if (!patient) {
-    throw createError('Patient not found.', 404);
+    throw createError("Patient not found.", 404);
   }
 
   return patient;

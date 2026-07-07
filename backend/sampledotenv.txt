@@ -1,2 +1,12 @@
 PORT=5000
-JWT_SECRET=dev-secret-change-me
+JWT_SECRET=dev-secret-key
+
+# Initial administrator used by `npm run seed:admin`.
+ADMIN_FIRST_NAME=System
+ADMIN_LAST_NAME=Admin
+ADMIN_EMAIL=admin@hospital.com
+ADMIN_PHONE=0771234567
+ADMIN_NIC=200012345678
+ADMIN_DOB=1990-01-01
+ADMIN_GENDER=Male
+ADMIN_PASSWORD=Admin@12345

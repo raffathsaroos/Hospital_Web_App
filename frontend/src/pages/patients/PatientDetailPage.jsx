@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Edit } from 'lucide-react'
-import TopBar from '@/components/layout/TopBar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { getPatientById } from '@/services/patientService'
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft, Edit } from "lucide-react";
+import TopBar from "@/components/layout/TopBar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getPatientById } from "@/services/patientService";
 
 // Displays one label and value in the patient detail grid.
 function DetailRow({ label, value }) {
@@ -18,26 +18,26 @@ function DetailRow({ label, value }) {
       </span>
       <span className="text-sm text-foreground">{value}</span>
     </div>
-  )
+  );
 }
 
 // Loads and displays the full record for one patient.
 export default function PatientDetailPage() {
-  const { id } = useParams()
-  const [patient, setPatient] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { id } = useParams();
+  const [patient, setPatient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Fetches the patient named in the current route.
     async function fetch() {
-      const { data, error } = await getPatientById(id)
-      if (error) setError(error)
-      else setPatient(data.patient)
-      setLoading(false)
+      const { data, error } = await getPatientById(id);
+      if (error) setError(error);
+      else setPatient(data.patient);
+      setLoading(false);
     }
-    fetch()
-  }, [id])
+    fetch();
+  }, [id]);
 
   return (
     <div>
@@ -78,11 +78,11 @@ export default function PatientDetailPage() {
               variant="outline"
               className={
                 patient.user.isActive
-                  ? 'border-green-500 bg-green-50 text-green-600'
-                  : 'border-red-400 bg-red-50 text-red-600'
+                  ? "border-green-500 bg-green-50 text-green-600"
+                  : "border-red-400 bg-red-50 text-red-600"
               }
             >
-              {patient.user.isActive ? 'Active' : 'Inactive'}
+              {patient.user.isActive ? "Active" : "Inactive"}
             </Badge>
           </CardHeader>
           <CardContent>
@@ -104,5 +104,5 @@ export default function PatientDetailPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

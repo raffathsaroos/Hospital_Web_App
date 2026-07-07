@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 // Guides unknown routes back to the patient section.
 export default function NotFoundPage() {
@@ -11,5 +11,5 @@ export default function NotFoundPage() {
         <Link to="/patients">Back to Patients</Link>
       </Button>
     </div>
-  )
+  );
 }

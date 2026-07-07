@@ -1,9 +1,9 @@
 export const USER_ROLES = [
-  'Admin',
-  'Patient',
-  'Doctor',
-  'Receptionist',
-  'Lab Operator',
-  'Radiologist',
-  'Pharmacist',
+  "Admin",
+  "Patient",
+  "Doctor",
+  "Receptionist",
+  "Lab Operator",
+  "Radiologist",
+  "Pharmacist",
 ];
