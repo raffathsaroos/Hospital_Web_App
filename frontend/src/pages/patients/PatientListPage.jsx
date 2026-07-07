@@ -104,11 +104,12 @@ export default function PatientListPage() {
       <ConfirmActionDialog
         open={Boolean(patientToDeactivate)}
         onOpenChange={(open) => !open && setPatientToDeactivate(null)}
-        title="Deactivate patient?"
+        title="Are you sure you want to mark this patient inactive?"
         description={`${patientToDeactivate?.user?.firstName ?? ""} ${
           patientToDeactivate?.user?.lastName ?? ""
         } will no longer be able to sign in.`}
-        confirmLabel="Deactivate Patient"
+        confirmLabel="Yes"
+        cancelLabel="No"
         onConfirm={confirmDeactivation}
         loading={actionLoading}
       />

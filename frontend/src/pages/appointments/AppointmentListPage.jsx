@@ -442,20 +442,16 @@ export default function AppointmentListPage() {
         onOpenChange={(open) => !open && setPendingAction(null)}
         title={
           pendingAction?.status === "Rejected"
-            ? "Reject appointment?"
-            : "Are you sure you want to cancel?"
+            ? "Are you sure you want to reject this appointment?"
+            : "Are you sure you want to cancel this appointment?"
         }
         description={
           pendingAction?.status === "Rejected"
             ? "This appointment will be rejected and removed from the active booking workflow."
             : undefined
         }
-        confirmLabel={
-          pendingAction?.status === "Rejected" ? "Reject Appointment" : "Yes"
-        }
-        cancelLabel={
-          pendingAction?.status === "Rejected" ? "Keep unchanged" : "No"
-        }
+        confirmLabel="Yes"
+        cancelLabel="No"
         onConfirm={confirmDestructiveAction}
         loading={actionLoading}
         reasonLabel={
