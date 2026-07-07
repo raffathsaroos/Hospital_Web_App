@@ -17,11 +17,14 @@ const roleActions = {
   Patient: { Pending: ['Cancelled'], Confirmed: ['Cancelled'] },
 }
 
+const appointmentCategories = ['Pending', 'Confirmed', 'Rejected', 'Paid', 'Diagnosed']
+
 export default function AppointmentListPage() {
   const { user } = useAuth()
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [appointmentCategory, setAppointmentCategory] = useState('Pending')
 
   useEffect(() => {
     async function load() {
@@ -37,6 +40,12 @@ export default function AppointmentListPage() {
     const dateDifference = new Date(a.appointmentDate) - new Date(b.appointmentDate)
     return dateDifference || a.timeSlot.localeCompare(b.timeSlot)
   }), [appointments])
+
+  const usesCategories = ['Admin', 'Receptionist'].includes(user?.role)
+  const displayedAppointments = useMemo(() => {
+    if (!usesCategories) return orderedAppointments
+    return orderedAppointments.filter((appointment) => appointment.status === appointmentCategory)
+  }, [appointmentCategory, orderedAppointments, usesCategories])
 
   async function changeStatus(appointment, status) {
     const warning = status === 'Cancelled'
@@ -63,9 +72,17 @@ export default function AppointmentListPage() {
       <TopBar title={user?.role === 'Doctor' ? 'Doctor Queue' : 'Appointments'} />
       {loading && <div className="space-y-3">{Array.from({ length: 4 }).map((_, index) => <Skeleton className="h-24" key={index} />)}</div>}
       {!loading && error && <Alert className="border-orange-300 bg-orange-50"><AlertDescription>{error}</AlertDescription></Alert>}
-      {!loading && !error && orderedAppointments.length === 0 && <Card><CardContent className="flex flex-col items-center py-12 text-center text-slate-500"><CalendarDays className="mb-3 h-8 w-8 text-blue-500" />No appointments are available.</CardContent></Card>}
+      {!loading && !error && usesCategories && (
+        <div className="mb-5 flex flex-wrap gap-2 rounded-lg border bg-white p-3">
+          {appointmentCategories.map((category) => {
+            const count = orderedAppointments.filter((appointment) => appointment.status === category).length
+            return <Button key={category} variant={appointmentCategory === category ? 'default' : 'outline'} onClick={() => setAppointmentCategory(category)}>{category} ({count})</Button>
+          })}
+        </div>
+      )}
+      {!loading && !error && displayedAppointments.length === 0 && <Card><CardContent className="flex flex-col items-center py-12 text-center text-slate-500"><CalendarDays className="mb-3 h-8 w-8 text-blue-500" />{usesCategories ? `No ${appointmentCategory.toLowerCase()} appointments are available.` : 'No appointments are available.'}</CardContent></Card>}
       <div className="space-y-3">
-        {orderedAppointments.map((appointment) => {
+        {displayedAppointments.map((appointment) => {
           const patient = appointment.patientId ?? appointment.guestPatient
           const doctor = appointment.doctorId
           const actions = roleActions[user?.role]?.[appointment.status] ?? []
