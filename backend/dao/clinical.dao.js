@@ -3,6 +3,8 @@ import Diagnosis from "../models/diagnosis.model.js";
 import Prescription from "../models/prescription.model.js";
 import LabRequest from "../models/labRequest.model.js";
 import RadiologyRequest from "../models/radiologyRequest.model.js";
+import EndoscopyRequest from "../models/endoscopyRequest.model.js";
+
 
 const people = "firstName lastName email phone";
 // Populate the identity and appointment context required by clinical work queues.
@@ -17,6 +19,7 @@ const createDiagnosis = (data) => Diagnosis.create(data);
 const createPrescription = (data) => Prescription.create(data);
 const createLabRequest = (data) => LabRequest.create(data);
 const createRadiologyRequest = (data) => RadiologyRequest.create(data);
+const createEndoscopyRequest = (data) => EndoscopyRequest.create(data);
 const findDiagnoses = (filter) =>
   populate(Diagnosis.find(filter).sort({ createdAt: -1 }));
 const findPrescriptions = (filter) =>
@@ -25,9 +28,12 @@ const findLabRequests = (filter) =>
   populate(LabRequest.find(filter).sort({ createdAt: -1 }));
 const findRadiologyRequests = (filter) =>
   populate(RadiologyRequest.find(filter).sort({ createdAt: -1 }));
+const findEndoscopyRequests = (filter) =>
+  populate(EndoscopyRequest.find(filter).sort({ createdAt: -1 }));
 const findPrescriptionById = (id) => Prescription.findById(id);
 const findLabRequestById = (id) => LabRequest.findById(id);
 const findRadiologyRequestById = (id) => RadiologyRequest.findById(id);
+const findEndoscopyRequestById = (id) => EndoscopyRequest.findById(id);
 
 export default {
   findAppointment,
@@ -36,11 +42,14 @@ export default {
   createPrescription,
   createLabRequest,
   createRadiologyRequest,
+  createEndoscopyRequest,
   findDiagnoses,
   findPrescriptions,
   findLabRequests,
   findRadiologyRequests,
+  findEndoscopyRequests,
   findPrescriptionById,
   findLabRequestById,
   findRadiologyRequestById,
+  findEndoscopyRequestById,
 };

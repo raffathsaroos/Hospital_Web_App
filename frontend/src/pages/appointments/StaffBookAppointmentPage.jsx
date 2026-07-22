@@ -27,6 +27,7 @@ const initialForm = {
   timeSlot: "",
   appointmentType: "OPD",
   notes: "",
+  notess: "",
 };
 
 export default function StaffBookAppointmentPage() {
@@ -175,20 +176,7 @@ export default function StaffBookAppointmentPage() {
                   onChange={(event) => update("email", event.target.value)}
                 />
               </Field>
-              <Field label="Visit type">
-                <select
-                  required
-                  value={form.appointmentType}
-                  onChange={(event) =>
-                    update("appointmentType", event.target.value)
-                  }
-                  className="h-10 w-full rounded-md border bg-white px-3 text-sm"
-                >
-                  <option>OPD</option>
-                  <option>IPD</option>
-                  <option>Emergency</option>
-                </select>
-              </Field>
+                
             </div>
 
             <div>

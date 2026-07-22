@@ -64,7 +64,9 @@ const registerPatient = async (patientData) => {
   });
 
   try {
-    const patient = await patientDao.createPatient({ user: user._id });
+    const patient = await patientDao.createPatient({ 
+      user: user._id, 
+      bloodGroup: patientData.bloodGroup, });
     return patientDao.findPatientById(patient._id);
   } catch (error) {
     // Avoid leaving an unused user if patient profile creation fails.

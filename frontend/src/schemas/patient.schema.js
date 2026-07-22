@@ -8,7 +8,8 @@ export const patientSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, "Phone must be exactly 10 digits"),
   nic: z.string().min(1, "NIC is required"),
   dob: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["Male", "Female", "Other"], {
+  bloodGroup: z.string().optional(),
+  gender: z.enum(["Male", "Female"], {
     message: "Please select a gender",
   }),
   password: z.string().min(8, "Password must be at least 8 characters"),

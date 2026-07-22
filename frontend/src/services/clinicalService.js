@@ -9,16 +9,22 @@ export const createLabRequest = (body) =>
   call(() => http.post("/lab-requests", body));
 export const createRadiologyRequest = (body) =>
   call(() => http.post("/radiology-requests", body));
+export const createEndoscopyRequest = (body) =>
+  call(() => http.post("/endoscopy-requests", body));  
 export const getPrescriptions = (params = {}) =>
   call(() => http.get("/prescriptions", { params }));
 export const getLabRequests = (params = {}) =>
   call(() => http.get("/lab-requests", { params }));
 export const getRadiologyRequests = (params = {}) =>
   call(() => http.get("/radiology-requests", { params }));
+export const getEndoscopyRequests = (params = {}) =>
+  call(() => http.get("/endoscopy-requests", { params }));  
 export const dispensePrescription = (id, body) =>
   call(() => http.patch(`/prescriptions/${id}/dispense`, body));
 export const completeLabRequest = (id, body) =>
   call(() => http.patch(`/lab-requests/${id}/complete`, body));
 export const completeRadiologyRequest = (id, body) =>
   call(() => http.patch(`/radiology-requests/${id}/complete`, body));
+export const completeEndoscopyRequest = (id, body) =>
+  call(() => http.patch(`/endoscopy-requests/${id}/complete`, body));  
 export const getClinicalReports = () => call(() => http.get("/reports"));

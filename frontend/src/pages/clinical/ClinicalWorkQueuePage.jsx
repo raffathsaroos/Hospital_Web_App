@@ -18,10 +18,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   completeLabRequest,
   completeRadiologyRequest,
+  completeEndoscopyRequest,
   dispensePrescription,
   getLabRequests,
   getPrescriptions,
   getRadiologyRequests,
+  getEndoscopyRequests,
 } from "@/services/clinicalService";
 import { downloadHospitalBill } from "@/lib/downloadBill";
 
@@ -29,6 +31,7 @@ const settings = {
   pharmacy: { title: "Prescription Queue", load: getPrescriptions },
   lab: { title: "Lab Test Queue", load: getLabRequests },
   radiology: { title: "Scan Request Queue", load: getRadiologyRequests },
+  endoscopy: { title: "Procedure Request Queue", load: getEndoscopyRequests },
 };
 
 // Uses one queue layout for pharmacy, laboratory, and radiology workloads.
@@ -48,6 +51,7 @@ export default function ClinicalWorkQueuePage({ type }) {
           result.data.prescriptions ??
           result.data.labRequests ??
           result.data.radiologyRequests ??
+          result.data.endoscopyRequests ??
           [];
         setRecords(
           loadedRecords.filter((record) => record.status === "Pending"),
@@ -88,8 +92,13 @@ export default function ClinicalWorkQueuePage({ type }) {
         result: form.result,
         price: Number(form.price),
       });
-    } else {
+    } else if (type === "radiology") {
       result = await completeRadiologyRequest(record._id, {
+        report: form.report,
+        price: Number(form.price),
+      });
+    } else {
+      result = await completeEndoscopyRequest(record._id, {
         report: form.report,
         price: Number(form.price),
       });
@@ -110,7 +119,9 @@ export default function ClinicalWorkQueuePage({ type }) {
       ]);
     } else {
       const completed =
-        type === "lab" ? result.data.labRequest : result.data.radiologyRequest;
+        type === "lab" ? 
+        result.data.labRequest : type === "radiology" ? 
+        result.data.radiologyRequest : result.data.endoscopyRequest;
       setCompletedRecords((current) => [
         {
           ...record,
@@ -309,6 +320,39 @@ export default function ClinicalWorkQueuePage({ type }) {
                       }
                     />
                     <Field label="Radiology report">
+                      <TextArea
+                        value={form.report ?? ""}
+                        onChange={(event) =>
+                          update(record._id, "report", event.target.value)
+                        }
+                      />
+                    </Field>
+                    <Field label="Price">
+                      <Input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={form.price ?? ""}
+                        onChange={(event) =>
+                          update(record._id, "price", event.target.value)
+                        }
+                      />
+                    </Field>
+                    <Button className="w-full" onClick={() => complete(record)}>
+                      Complete scan request
+                    </Button>
+                  </>
+                )}
+				{type === "endoscopy" && (
+                  <>
+                    <Info label="Requested Procedure" value={record.scanType} />
+                    <Info
+                      label="Instructions"
+                      value={
+                        record.instructions || "No additional instructions"
+                      }
+                    />
+                    <Field label="Endoscopy report">
                       <TextArea
                         value={form.report ?? ""}
                         onChange={(event) =>
@@ -607,7 +651,7 @@ function downloadPrescriptionBill(record) {
 function downloadRequestBill(type, record) {
   const isLab = type === "lab";
   downloadHospitalBill({
-    title: isLab ? "Lab Test Bill" : "Radiology Bill",
+    title: isLab ? "Lab Test Bill" : "Endoscopy Bill",
     billNumber: record._id,
     patientName: patientForRecord(record),
     meta: [

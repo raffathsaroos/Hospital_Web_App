@@ -26,6 +26,7 @@ const roles = [
   "Lab Operator",
   "Radiologist",
   "Pharmacist",
+  "Endoscopy Operator"
 ];
 const departments = [
   "Cardiology",

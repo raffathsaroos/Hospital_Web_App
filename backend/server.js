@@ -9,6 +9,7 @@ import doctorRoutes from "./routes/doctor.route.js";
 import clinicalRoutes from "./routes/clinical.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
 import Appointment from "./models/appointment.model.js";
+import Patient from "./models/patient.model.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ mongoose
   .then(async () => {
     // Removes obsolete indexes and applies the current 10-patient slot indexes.
     await Appointment.syncIndexes();
+    await Patient.syncIndexes();
     console.log("Connected to local MongoDB");
   })
   .catch((error) => console.error("DB Connection Error:", error));

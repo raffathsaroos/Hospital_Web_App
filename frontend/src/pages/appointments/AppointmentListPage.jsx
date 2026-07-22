@@ -5,7 +5,9 @@ import {
   CheckCircle2,
   Clock3,
   Download,
+  Phone,
   XCircle,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import TopBar from "@/components/layout/TopBar";
@@ -352,6 +354,14 @@ export default function AppointmentListPage() {
                         ? `${patient.firstName} ${patient.lastName}`
                         : "Guest patient"}
                     </p>
+                    {appointment.status ===  "Pending" && (
+                      
+                      <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                      <Phone className="h-4 w-4 text-slate-600"/>
+                      {patient?.phone ?? "no contact detaails"}
+                      </p>
+
+                    )}
                     <p className="text-sm text-slate-500">
                       {appointment.department} · {appointment.appointmentType}
                     </p>
@@ -384,6 +394,15 @@ export default function AppointmentListPage() {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                     {  appointment.status === "Diagnosed" &&
+                        !appointment.patientId && (
+                        <Button asChild size="sm">
+                        <Link to="/patients/register">
+                        <UserPlus className="mr-2 h-4 w-4" />
+                            Register as Patient
+                        </Link>
+                        </Button>
+                      )}
                     {["Admin", "Receptionist"].includes(user?.role) &&
                       ["Paid", "Diagnosed"].includes(appointment.status) && (
                         <Button

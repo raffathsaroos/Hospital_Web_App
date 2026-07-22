@@ -1,0 +1,124 @@
+Create a professional, technically accurate viva presentation titled **“Hospital Management System — Streamlining Hospital Workflow Through a Web Application.”**
+
+The presentation must contain **exactly 15 slides** and must be based only on the supplied project repository. Do not invent features, test results, statistics, deployment details, or technologies that are not present in the project. Use concise academic English, strong visual hierarchy, and minimal text. Add short speaker notes and likely viva questions with model answers for each technical slide.
+
+Project context:
+
+- Purpose: reduce crowded, rushed, paper-based hospital workflows through organized appointment scheduling, digital patient management, role-based work queues, and connected clinical records.
+- Frontend: React 19, Vite, React Router, Tailwind CSS, shadcn/Radix UI, Axios, React Hook Form, and Zod.
+- Backend: Node.js, Express.js, MongoDB, Mongoose, JWT, CORS, and dotenv.
+- Architecture: React client → REST API → routes → middleware → controllers → services → DAOs → Mongoose models → MongoDB.
+- Roles: Admin, Receptionist, Doctor, Patient, Pharmacist, Lab Operator, Radiologist, and Endoscopy Operator.
+- Main functions: public and staff appointment booking, doctor schedules, patient registration, appointment status management, booking-order numbers, role-based dashboards, diagnosis, prescriptions, pharmacy work queue, laboratory requests, radiology requests, endoscopy requests, reports, and billing-related totals.
+- Important business rule: a doctor’s appointment slot supports a maximum of 10 active patients.
+- Appointment lifecycle: Pending → Confirmed → Paid → Diagnosed, with controlled Rejected and Cancelled transitions.
+- Relevant files include:
+  - `frontend/src/App.jsx`
+  - `frontend/src/context/AuthContext.jsx`
+  - `frontend/src/services/api.js`
+  - `frontend/src/schemas/patient.schema.js`
+  - `backend/server.js`
+  - `backend/middleware/auth.middleware.js`
+  - `backend/middleware/authorize.middleware.js`
+  - `backend/services/appointment.services.js`
+  - `backend/services/clinical.services.js`
+  - `backend/dao/appointment.dao.js`
+  - `backend/models/appointment.model.js`
+
+Use this slide structure:
+
+1. **Title Slide**  
+   Project title, subtitle “Viva Presentation,” presenter-name placeholder, registration-number placeholder, institution placeholder, and date.
+
+2. **Motivation and Real-World Problem**  
+   Explain crowded hospital reception areas, long queues, rushed staff, appointment conflicts, fragmented records, repeated manual work, and delays between doctors and clinical departments. Present these as motivating problems, not unsupported measured statistics.
+
+3. **Proposed Solution and Objectives**  
+   Show how the web application centralizes booking, scheduling, patient data, clinical requests, status tracking, and role-specific work. State objectives such as reducing unnecessary physical queues, improving coordination, protecting records, and increasing workflow visibility.
+
+4. **Users and Major Features**  
+   Map every implemented role to its relevant responsibilities. Use a clean role-to-feature diagram or table.
+
+5. **End-to-End Hospital Workflow**  
+   Visualize: public/staff booking → schedule and slot validation → confirmation → payment → doctor consultation → diagnosis/prescription/test request → department work queue → completed report. Clearly show how this reduces handoffs and confusion.
+
+6. **System Architecture**  
+   Present the layered architecture: React UI → Axios/REST API → Express routes → authentication/authorization middleware → controllers → services/business rules → DAO/data access → Mongoose/MongoDB. Briefly justify separation of concerns, maintainability, testability, and scalability.
+
+7. **Technology Stack and Justifications**  
+   Explain why each actual technology suits this project:
+   - React for reusable, state-driven interfaces
+   - Vite for fast development and optimized builds
+   - React Router for public, protected, and role-specific navigation
+   - Tailwind/Radix UI for consistent responsive components
+   - React Hook Form and Zod for form handling and validation
+   - Axios for centralized API communication
+   - Node.js and Express for a JavaScript-based REST backend
+   - MongoDB/Mongoose for flexible but validated hospital records and relationships
+   - JWT for stateless authentication  
+   Include realistic trade-offs; do not claim that these are universally superior.
+
+8. **Data Model and Relationships**  
+   Create a simplified ER-style diagram showing User, Doctor, Patient, Appointment, Diagnosis, Prescription, Lab Request, Radiology Request, and Endoscopy Request. Highlight appointment-centered clinical records, references, unique constraints, enums, timestamps, and indexes. Do not add nonexistent entities.
+
+9. **Core Code 1 — Appointment and Capacity Validation**  
+   Extract a short, readable block from `backend/services/appointment.services.js` showing schedule validation and/or the 10-patient slot limit. Explain:
+   - validation of date and time
+   - doctor availability
+   - alignment with the doctor’s configured schedule
+   - counting active bookings
+   - returning HTTP 409 for unavailable/full slots  
+   Justify why business rules belong in the service layer and explain how this reduces overbooking and hospital congestion.
+
+10. **Core Code 2 — Authentication and Role-Based Authorization**  
+    Extract concise blocks from `backend/middleware/auth.middleware.js`, `backend/middleware/authorize.middleware.js`, and, if useful, `frontend/src/App.jsx`. Explain bearer-token validation, reloading the active user, rejecting inactive accounts, role checks, HTTP 401 versus 403, protected routes, and least-privilege access. Clarify that frontend route protection improves UX, while backend authorization provides actual security.
+
+11. **Core Code 3 — Controlled Clinical Workflow**  
+    Extract a short block from `backend/services/clinical.services.js` showing that clinical records inherit trusted patient and doctor IDs from an authorized appointment. Explain appointment ownership, paid-appointment validation, diagnosis creation, status change to Diagnosed, work queues, and why IDs should be derived from trusted server data instead of client input.
+
+12. **Core Code 4 — Data Integrity and Appointment State Machine**  
+    Show either the appointment status-transition map from `backend/services/appointment.services.js` or relevant schema/index definitions from `backend/models/appointment.model.js`. Explain how controlled transitions prevent invalid workflow states and how validation, enums, references, unique constraints, and indexes improve consistency and query performance.
+
+13. **Demonstration Scenario**  
+    Provide a practical demo sequence suitable for a viva:
+    1. A patient books an appointment.
+    2. The system validates the doctor’s schedule and slot capacity.
+    3. Reception confirms the appointment and records payment.
+    4. The doctor opens the paid appointment and records a diagnosis.
+    5. The doctor creates a prescription or investigation request.
+    6. The relevant operator processes the work queue.
+    7. The report becomes available in the clinical record.  
+    Include placeholders for actual screenshots from the project rather than generating fake interfaces.
+
+14. **Evaluation, Strengths, Limitations, and Improvements**  
+    Separate implemented strengths from future work. Mention strengths such as role separation, centralized workflows, layered architecture, server-side validation, capacity controls, and connected clinical records. Honestly identify current limitations visible from the repository, including local MongoDB configuration, no automated backend test suite, basic JWT storage in browser localStorage, broad CORS configuration, limited audit logging, and no confirmed production deployment. Recommend useful improvements:
+    - automated unit, integration, and end-to-end tests
+    - environment-based database configuration
+    - secure HTTP-only cookie authentication or stronger token handling
+    - restricted CORS and production security headers
+    - audit logs for sensitive actions
+    - atomic booking/counter operations to prevent race conditions
+    - notifications and queue estimations
+    - analytics, backups, accessibility review, and deployment monitoring  
+    Do not imply these improvements are already implemented.
+
+15. **Conclusion and Viva Takeaways**  
+    Summarize the problem, solution, main engineering contribution, and practical value. End with a strong statement: the system does more than digitize records—it coordinates the patient journey through controlled, role-aware workflows. Add “Questions?” and provide 6 likely viva questions with concise model answers in the speaker notes.
+
+Presentation rules:
+
+- Do not exceed or fall below 15 slides.
+- Keep each slide to approximately 3–6 concise points.
+- Use a professional healthcare color palette: navy, teal, white, and subtle light gray.
+- Use diagrams, icons, workflow arrows, and tables where they communicate better than paragraphs.
+- Avoid decorative clutter, excessive animation, generic stock imagery, and unsupported claims.
+- Display code in a readable monospaced font with syntax highlighting.
+- Use no more than approximately 12–18 lines in any code example.
+- Preserve the real logic but remove unrelated lines with `...` where necessary.
+- Label every code extract with its actual repository file path.
+- For each code slide, include three small sections: “What it does,” “Why it matters,” and “Why this design.”
+- Define technical terms such as DAO, JWT, middleware, HTTP 401, HTTP 403, and HTTP 409 in simple viva-friendly language.
+- Add brief speaker notes that help the presenter explain the slide naturally rather than read it word-for-word.
+- Add likely examiner follow-up questions and accurate model answers to slides 6–14.
+- Use careful wording such as “designed to reduce” rather than claiming proven reductions without measured evidence.
+- Correct all grammar and spelling while preserving the intended project meaning.

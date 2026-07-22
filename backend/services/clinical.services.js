@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import clinicalDao from "../dao/clinical.dao.js";
 
+
 const error = (message, statusCode) =>
   Object.assign(new Error(message), { statusCode });
 const validId = (id, label) => {
@@ -71,8 +72,18 @@ const createRadiologyRequest = async (data, actor) => {
   });
 };
 
+const createEndoscopyRequest = async (data, actor) => {
+  if (!data.procedureType?.trim()) throw error("Procedure type is required.", 400);
+  const appointment = await appointmentForDoctor(data.appointmentId, actor);
+  return clinicalDao.createEndoscopyRequest({
+    ...baseRecord(appointment, actor),
+    procedureType: data.procedureType,
+    instructions: data.instructions,
+  });
+};
+
+ // Patients and doctors are scoped to their records; operators receive work queues.
 const actorFilter = (actor) => {
-  // Patients and doctors are scoped to their records; operators receive work queues.
   if (actor.role === "Patient") return { patientId: actor._id };
   if (actor.role === "Doctor") return { doctorId: actor._id };
   return {};
@@ -90,6 +101,12 @@ const listLabRequests = (actor, query) =>
   });
 const listRadiologyRequests = (actor, query) =>
   clinicalDao.findRadiologyRequests({
+    ...actorFilter(actor),
+    ...(query.status ? { status: query.status } : {}),
+  });
+  
+  const listEndoscopyRequests = (actor, query) =>
+  clinicalDao.findEndoscopyRequests({
     ...actorFilter(actor),
     ...(query.status ? { status: query.status } : {}),
   });
@@ -174,16 +191,36 @@ const completeRadiologyRequest = async (id, data, actor) => {
   return request;
 };
 
+const completeEndoscopyRequest = async (id, data, actor) => {
+  validId(id, "endoscopy request ID");
+  if (!data.report?.trim() || !(Number(data.price) > 0))
+    throw error("Endoscopy report and a positive price are required.", 400);
+  const request = await clinicalDao.findEndoscopyRequestById(id);
+  if (!request) throw error("Endoscopy request not found.", 404);
+  if (request.status === "Completed")
+    throw error("Endoscopy request is already completed.", 409);
+  Object.assign(request, {
+    report: data.report,
+    price: Number(data.price),
+    status: "Completed",
+    completedBy: actor._id,
+    completedAt: new Date(),
+  });
+  await request.save();
+  return request;
+};
+
 const getReports = async (actor) => {
   const filter = actorFilter(actor);
-  const [diagnoses, prescriptions, labReports, radiologyReports] =
+  const [diagnoses, prescriptions, labReports, radiologyReports, endoscopyReports] =
     await Promise.all([
       clinicalDao.findDiagnoses(filter),
       clinicalDao.findPrescriptions(filter),
       clinicalDao.findLabRequests(filter),
       clinicalDao.findRadiologyRequests(filter),
+      clinicalDao.findEndoscopyRequests(filter),
     ]);
-  return { diagnoses, prescriptions, labReports, radiologyReports };
+  return { diagnoses, prescriptions, labReports, radiologyReports, endoscopyReports };
 };
 
 export default {
@@ -191,11 +228,14 @@ export default {
   createPrescription,
   createLabRequest,
   createRadiologyRequest,
+  createEndoscopyRequest,
   listPrescriptions,
   listLabRequests,
   listRadiologyRequests,
+  listEndoscopyRequests,
   dispensePrescription,
   completeLabRequest,
   completeRadiologyRequest,
+  completeEndoscopyRequest,
   getReports,
 };

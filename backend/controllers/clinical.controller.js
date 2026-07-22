@@ -60,6 +60,16 @@ const createRadiologyRequest = action(
   }),
   201,
 );
+const createEndoscopyRequest = action(
+  async (req) => ({
+    message: "Endoscopy request created.",
+    endoscopyRequest: await clinicalService.createEndoscopyRequest(
+      req.body,
+      req.user,
+    ),
+  }),
+  201,
+);
 const listPrescriptions = action(async (req) => {
   const prescriptions = await clinicalService.listPrescriptions(
     req.user,
@@ -80,6 +90,13 @@ const listRadiologyRequests = action(async (req) => {
     req.query,
   );
   return { count: radiologyRequests.length, radiologyRequests };
+});
+const listEndoscopyRequests = action(async (req) => {
+  const endoscopyRequests = await clinicalService.listEndoscopyRequests(
+    req.user,
+    req.query,
+  );
+  return { count: endoscopyRequests.length, endoscopyRequests };
 });
 const dispensePrescription = action(async (req) => ({
   message: "Prescription dispensed and bill generated.",
@@ -105,6 +122,14 @@ const completeRadiologyRequest = action(async (req) => ({
     req.user,
   ),
 }));
+const completeEndoscopyRequest = action(async (req) => ({
+  message: "Endoscopy report completed and bill generated.",
+  endoscopyRequest: await clinicalService.completeEndoscopyRequest(
+    req.params.id,
+    req.body,
+    req.user,
+  ),
+}));
 const getReports = action(async (req) => clinicalService.getReports(req.user));
 
 export default {
@@ -112,11 +137,14 @@ export default {
   createPrescription,
   createLabRequest,
   createRadiologyRequest,
+  createEndoscopyRequest,
   listPrescriptions,
   listLabRequests,
   listRadiologyRequests,
+  listEndoscopyRequests,
   dispensePrescription,
   completeLabRequest,
   completeRadiologyRequest,
+  completeEndoscopyRequest,
   getReports,
 };

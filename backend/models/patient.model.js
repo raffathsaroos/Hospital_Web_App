@@ -9,6 +9,7 @@ const PatientSchema = new mongoose.Schema(
       required: [true, "User is required"],
       unique: true,
     },
+    bloodGroup: { type: String }, 
   },
   {
     timestamps: true,

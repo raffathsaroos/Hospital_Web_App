@@ -47,6 +47,7 @@ export default function App() {
                   "Lab Operator",
                   "Radiologist",
                   "Pharmacist",
+                  "Endoscopy Operator",
                 ]}
               />
             }
@@ -91,6 +92,12 @@ export default function App() {
             <Route
               path="/radiology-queue"
               element={<ClinicalWorkQueuePage type="radiology" />}
+            />
+          </Route>
+          <Route element={<RoleRoute roles={["Endoscopy Operator"]} />}>
+            <Route
+              path="/endoscopy-queue"
+              element={<ClinicalWorkQueuePage type="endoscopy" />}
             />
           </Route>
           <Route element={<RoleRoute roles={["Admin"]} />}>
@@ -157,7 +164,19 @@ export default function App() {
               path="/staff/radiologist/:id/edit"
               element={<StaffEditPage role="Radiologist" slug="radiologist" />}
             />
-          </Route>
+			<Route
+              path="/staff/endoscopy-operator"
+              element={<StaffListPage role="Endoscopy Operator" slug="endoscopy-operator" />}
+            />
+            <Route
+              path="/staff/endoscopy-operator/add"
+              element={<UserCreatePage fixedRole="Endoscopy Operator" />}
+            />
+            <Route
+              path="/staff/endoscopy-operator/:id/edit"
+              element={<StaffEditPage role="Endoscopy Operator" slug="endoscopy-operator" />}
+            />
+            </Route>
           <Route
             element={<RoleRoute roles={["Admin", "Receptionist", "Doctor"]} />}
           >

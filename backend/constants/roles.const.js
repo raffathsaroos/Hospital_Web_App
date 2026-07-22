@@ -6,4 +6,5 @@ export const USER_ROLES = [
   "Lab Operator",
   "Radiologist",
   "Pharmacist",
+  "Endoscopy Operator",
 ];

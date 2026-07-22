@@ -44,7 +44,12 @@ const navItems = [
     roles: ["Admin"],
   },
   {
-    to: "/staff/radiologist",
+    to: "/staff/endoscopy-operator",
+    label: "Endoscopy Operators",
+    icon: ScanLine,
+    roles: ["Admin"],
+  },
+  { to: "/staff/radiologist",
     label: "Radiologists",
     icon: ScanLine,
     roles: ["Admin"],
@@ -85,6 +90,12 @@ const navItems = [
     icon: ScanLine,
     roles: ["Radiologist"],
   },
+  {
+    to: "/endoscopy-queue",
+    label: "Procedure Request Queue",
+    icon: ScanLine,
+    roles: ["Endoscopy Operator"],
+  },
 ];
 
 // Shows the main hospital navigation and staff area.
@@ -101,7 +112,7 @@ export default function Sidebar() {
     navigate("/login");
   }
   return (
-    <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col bg-slate-900 text-slate-300 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col bg-slate-900 text-slate-300 md:flex">
       <Link
         to="/"
         className="flex items-center gap-2 border-b border-slate-700 px-4 py-5 hover:bg-slate-800"
@@ -111,7 +122,7 @@ export default function Sidebar() {
           alt="New Hospital logo"
           className="h-8 w-8 object-contain"
         />
-        <span className="text-lg font-semibold text-white">New Hospital</span>
+        <span className="text-lg font-semibold text-white">New Digital Hospital</span>
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1 p-3">

@@ -46,6 +46,7 @@ export default function PatientRegisterPage() {
       dob: "",
       gender: "",
       password: "",
+      bloodGroup:"",
     },
   });
 
@@ -190,13 +191,43 @@ export default function PatientRegisterPage() {
                       <SelectContent>
                         <SelectItem value="Male">Male</SelectItem>
                         <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="bloodGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Blood Group</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Blood Group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> 
 
               <FormField
                 control={form.control}

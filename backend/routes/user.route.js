@@ -15,6 +15,7 @@ router.get(
     "Lab Operator",
     "Radiologist",
     "Pharmacist",
+    "Endoscopy Operator",
   ),
   userController.getMe,
 );

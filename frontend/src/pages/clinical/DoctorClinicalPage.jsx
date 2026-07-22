@@ -18,7 +18,9 @@ import {
   createLabRequest,
   createPrescription,
   createRadiologyRequest,
+  createEndoscopyRequest,
 } from "@/services/clinicalService";
+
 
 const initialDiagnosis = {
   symptoms: "",
@@ -35,6 +37,10 @@ export default function DoctorClinicalPage() {
   const [lab, setLab] = useState({ testName: "", instructions: "" });
   const [radiology, setRadiology] = useState({
     scanType: "",
+    instructions: "",
+  });
+  const [endoscopy, setEndoscopy] = useState({
+    procedureType: "",
     instructions: "",
   });
 
@@ -75,7 +81,17 @@ export default function DoctorClinicalPage() {
     toast.success("Scan request sent to radiologist");
     setRadiology({ scanType: "", instructions: "" });
   }
-
+  
+  async function submitEndoscopy(event) {
+    event.preventDefault();
+    const result = await createEndoscopyRequest({
+      appointmentId,
+      ...endoscopy,
+    });
+    if (result.error) return toast.error(result.error);
+    toast.success("Endoscopy request sent to Endoscopy operator");
+    setEndoscopy({ procedureType: "", instructions: "" });
+  }
   return (
     <div>
       <TopBar title="Clinical Workspace">
@@ -196,6 +212,34 @@ export default function DoctorClinicalPage() {
               />
             </Field>
             <Button className="w-full">Send to radiologist</Button>
+          </form>
+        </ClinicalCard>
+		<ClinicalCard
+          title="Endoscopy request"
+          description="Send a procedure request to the endoscopy operator."
+        >
+          <form onSubmit={submitEndoscopy} className="space-y-4">
+            <Field label="Procedure type">
+              <Input
+                required
+                value={endoscopy.procedureType}
+                onChange={(event) =>
+                  setEndoscopy({ ...endoscopy, procedureType: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Instructions">
+              <TextArea
+                value={endoscopy.instructions}
+                onChange={(event) =>
+                  setEndoscopy({
+                    ...endoscopy,
+                    instructions: event.target.value,
+                  })
+                }
+              />
+            </Field>
+            <Button className="w-full">Send to endoscopy operator</Button>
           </form>
         </ClinicalCard>
       </div>

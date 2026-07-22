@@ -59,6 +59,21 @@ router.patch(
   clinicalController.completeRadiologyRequest,
 );
 
+router.post(
+  "/endoscopy-requests",
+  authorize("Doctor"),
+  clinicalController.createEndoscopyRequest,
+);
+router.get(
+  "/endoscopy-requests",
+  authorize("Admin", "Doctor", "Endoscopy Operator", "Patient"),
+  clinicalController.listEndoscopyRequests,
+);
+router.patch(
+  "/endoscopy-requests/:id/complete",
+  authorize("Endoscopy Operator"),
+  clinicalController.completeEndoscopyRequest,
+);
 router.get(
   "/reports",
   authorize("Admin", "Doctor", "Patient"),

@@ -21,7 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getClinicalReports } from "@/services/clinicalService";
 
-// Joins the four clinical record types by appointment for one patient visit.
+// Joins the clinical record types by appointment for one patient visit.
 export default function DoctorReportsPage() {
   const [reports, setReports] = useState(null);
   const [error, setError] = useState("");
@@ -49,6 +49,9 @@ export default function DoctorReportsPage() {
           (record) => recordAppointmentId(record) === appointmentId,
         ),
         radiologyRequests: reports.radiologyReports.filter(
+          (record) => recordAppointmentId(record) === appointmentId,
+        ),
+		endoscopyRequests: reports.endoscopyReports.filter(
           (record) => recordAppointmentId(record) === appointmentId,
         ),
       };
@@ -188,6 +191,24 @@ function PatientVisitReport({ visit, expanded, onToggle }) {
               visit.radiologyRequests.map((request) => (
                 <div key={request._id} className="rounded-md border p-3">
                   <ReportValue label="Scan" value={request.scanType} />
+                  <ReportValue
+                    label="Instructions"
+                    value={request.instructions}
+                  />
+                  <ReportValue label="Report" value={request.report} />
+                  <ReportValue label="Status" value={request.status} />
+                </div>
+              ))
+            ) : (
+              <EmptyRecord />
+            )}
+          </ReportSection>
+		  
+		  <ReportSection icon={ScanLine} title="Endoscopy requests">
+            {visit.endoscopyRequests.length ? (
+              visit.endoscopyRequests.map((request) => (
+                <div key={request._id} className="rounded-md border p-3">
+                  <ReportValue label="Procedure" value={request.procedureType} />
                   <ReportValue
                     label="Instructions"
                     value={request.instructions}

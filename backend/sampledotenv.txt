@@ -10,3 +10,9 @@ ADMIN_NIC=200012345678
 ADMIN_DOB=1990-01-01
 ADMIN_GENDER=Male
 ADMIN_PASSWORD=Admin@12345
+
+mongodump --db hospital_db --out "D:\hospital_backup"
+mongorestore --db hospital_db "D:\hospital_backup\hospital_db"
+
+Stop-Service MongoDB
+Stop-Service MongoDB
