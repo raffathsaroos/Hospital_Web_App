@@ -14,7 +14,7 @@ export default function PublicHeader() {
           />
           <span>
             <span className="block text-lg font-bold leading-none">
-              New Hospital
+              New Digital Hospital
             </span>
             <span className="text-xs text-slate-500">Care that connects</span>
           </span>
