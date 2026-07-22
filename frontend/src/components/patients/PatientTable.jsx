@@ -24,6 +24,7 @@ export default function PatientTable({ patients, onToggleStatus }) {
             <TableHead>NIC</TableHead>
             <TableHead>Date of Birth</TableHead>
             <TableHead>Gender</TableHead>
+            <TableHead>Blood Group</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -58,6 +59,7 @@ export default function PatientTable({ patients, onToggleStatus }) {
                   {user.dob ? new Date(user.dob).toLocaleDateString() : "—"}
                 </TableCell>
                 <TableCell>{user.gender ?? "—"}</TableCell>
+                <TableCell>{patient.bloodGroup ?? "—"}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"

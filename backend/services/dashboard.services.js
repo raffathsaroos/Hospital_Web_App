@@ -57,7 +57,7 @@ const getAnalytics = async (actor) => {
       const fee = Number(feeByDoctor.get(doctorId) ?? 0);
       revenueByDoctor.set(
         doctorId,
-        buildDoctorMetric(
+        buildRevenueMetric(
           revenueByDoctor.get(doctorId),
           doctorId,
           doctorName,
@@ -83,6 +83,13 @@ const buildDoctorMetric = (current, id, label, amount) => ({
   id,
   label,
   value: (current?.value ?? 0) + amount,
+});
+
+const buildRevenueMetric = (current, id, label, amount) => ({
+  id,
+  label,
+  value: (current?.value ?? 0) + amount,
+  appointmentCount: (current?.appointmentCount ?? 0) + 1,
 });
 
 export default { getAnalytics };

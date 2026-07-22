@@ -61,6 +61,7 @@ const initialForm = {
   licenseNumber: "",
   experience: "",
   consultationFee: "",
+  education:"",
 };
 
 export default function UserCreatePage({ fixedRole }) {
@@ -96,7 +97,7 @@ export default function UserCreatePage({ fixedRole }) {
         licenseNumber: form.licenseNumber,
         experience: Number(form.experience),
         consultationFee: Number(form.consultationFee),
-        qualifications: [],
+        qualifications: form.education,
         availableDays: [],
         availableTimeSlots: [],
         isAvailable: false,
@@ -269,6 +270,14 @@ export default function UserCreatePage({ fixedRole }) {
                         update("consultationFee", e.target.value)
                       }
                     />
+                  </Field>
+                  <Field label="Education">
+                  <Input
+                  optional
+                  minLength={2}
+                  value={form.education}
+                  onChange={(e) => update("education", e.target.value)}
+                  />
                   </Field>
                 </div>
                 <p className="mt-4 text-xs text-slate-500">

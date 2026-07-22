@@ -85,3 +85,48 @@
     min-height: 100svh;
   }
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .dashboard-report,
+  .dashboard-report * {
+    visibility: visible;
+  }
+
+  .dashboard-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    color: #0f172a;
+    background: white;
+  }
+
+  .dashboard-report-actions,
+  .dashboard-screen-only {
+    display: none !important;
+  }
+
+  .report-card {
+    margin-bottom: 16px;
+    break-inside: avoid;
+  }
+
+  .dashboard-report table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dashboard-report th,
+  .dashboard-report td {
+    border: 1px solid #cbd5e1;
+  }
+}

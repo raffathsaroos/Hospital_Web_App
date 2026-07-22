@@ -40,9 +40,10 @@ const editSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, "Phone must be exactly 10 digits"),
   nic: z.string().min(1, "NIC is required"),
   dob: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["Male", "Female", "Other"], {
+  gender: z.enum(["Male", "Female", ], {
     message: "Please select a gender",
   }),
+  bloodGroup: z.string().optional(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -65,6 +66,7 @@ export default function PatientEditPage() {
       dob: "",
       gender: "",
       password: "",
+      bloodGroup:"",
     },
   });
 
@@ -85,6 +87,7 @@ export default function PatientEditPage() {
         nic: u.nic,
         dob: u.dob ? new Date(u.dob).toISOString().split("T")[0] : "",
         gender: u.gender,
+        bloodGroup: data.patient.bloodGroup || "",
         password: "",
       });
     }
@@ -226,14 +229,39 @@ export default function PatientEditPage() {
                       <SelectContent>
                         <SelectItem value="Male">Male</SelectItem>
                         <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
+                            <FormField
+                control={form.control}
+                name="bloodGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Blood Group</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Blood Group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"

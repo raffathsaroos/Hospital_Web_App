@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import DashboardReports from "@/components/dashboard/DashboardReports";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardAnalytics } from "@/services/dashboardService";
 
@@ -27,8 +28,10 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <TopBar title="Dashboard" />
-      <div className="rounded-2xl bg-gradient-to-r from-blue-700 to-slate-700 p-7 text-white">
+      <div className="dashboard-screen-only">
+        <TopBar title="Dashboard" />
+      </div>
+      <div className="dashboard-screen-only rounded-2xl bg-gradient-to-r from-blue-700 to-slate-700 p-7 text-white">
         <p className="text-blue-100">Welcome back, {user?.firstName}</p>
         <h2 className="mt-1 text-3xl font-bold">Hospital analytics</h2>
         <p className="mt-3 max-w-2xl text-blue-100">
@@ -43,7 +46,7 @@ export default function DashboardPage() {
       )}
       {!error && !analytics && <DashboardSkeleton />}
       {analytics && (
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <div className="dashboard-screen-only mt-6 grid gap-6 xl:grid-cols-2">
           <ChartCard
             icon={BarChart3}
             title="Patient Visits by Doctor"
@@ -94,6 +97,9 @@ export default function DashboardPage() {
             />
           </ChartCard>
         </div>
+      )}
+      {analytics && user?.role === "Admin" && (
+        <DashboardReports analytics={analytics} user={user} />
       )}
     </div>
   );

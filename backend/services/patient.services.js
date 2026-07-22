@@ -97,6 +97,9 @@ const updatePatient = async (id, patientData) => {
   await ensureUniqueUser(updates, patient.user._id);
   await userDao.updateUserById(patient.user._id, updates);
 
+  if (patientData.bloodGroup !== undefined) {
+    await patientDao.updatePatientById(id, { bloodGroup: patientData.bloodGroup });
+  }
   return patientDao.findPatientById(id);
 };
 
